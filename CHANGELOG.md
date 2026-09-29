@@ -11,6 +11,8 @@ and both loaders — only the compatibility metadata differs.
   servers they joined without thinking about it. It still runs in singleplayer and when you host
   a LAN world. On any other server it stays off and says so once in chat; if the server allows
   it, `/bhop set allowOnServers true` turns it back on.
+- **One jar per loader now covers Minecraft 26.1, 26.1.1 and 26.1.2.** The three builds were
+  byte-identical apart from their version metadata.
 
 ### Added
 - Links to the source code and issue tracker in the mod metadata, so players can reach them from

@@ -38,6 +38,9 @@ foreach ($mc in $Versions) {
     foreach ($loader in $loaders) {
         Write-Host ""
         Write-Host "=== $($loader.Name) / Minecraft $mc ===" -ForegroundColor Cyan
+        $libs = Join-Path $loader.Dir "build\$mc\libs"
+        # Jars from older mod versions linger in libs and would otherwise be copied into dist.
+        Remove-Item (Join-Path $libs '*.jar') -ErrorAction SilentlyContinue
         Push-Location $loader.Dir
         try {
             # Gradle and javac write notes to stderr. Under 'Stop', Windows PowerShell turns those
@@ -51,7 +54,6 @@ foreach ($mc in $Versions) {
         }
 
         if ($ok) {
-            $libs = Join-Path $loader.Dir "build\$mc\libs"
             Get-ChildItem $libs -Filter '*.jar' | Where-Object { $_.Name -notlike '*-sources.jar' } |
                 ForEach-Object {
                     Copy-Item $_.FullName -Destination $dist -Force
