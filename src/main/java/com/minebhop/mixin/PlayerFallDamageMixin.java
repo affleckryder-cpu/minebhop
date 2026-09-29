@@ -1,6 +1,7 @@
 package com.minebhop.mixin;
 
 import com.minebhop.MineBhop;
+import com.minebhop.movement.SourceMoveHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,7 +36,7 @@ public class PlayerFallDamageMixin {
 	@Inject(method = "causeFallDamage", at = @At("HEAD"), cancellable = true)
 	private void minebhop$noFallDamage(double fallDistance, float damageModifier, DamageSource damageSource,
 			CallbackInfoReturnable<Boolean> cir) {
-		if (!MineBhop.config().enabled || !MineBhop.config().disableFallDamage) {
+		if (!MineBhop.config().enabled || !MineBhop.config().disableFallDamage || !SourceMoveHandler.allowedHere()) {
 			return;
 		}
 

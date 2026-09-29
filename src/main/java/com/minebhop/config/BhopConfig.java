@@ -17,6 +17,11 @@ public class BhopConfig {
 	@Tunable("Master switch for the Source movement simulation.")
 	public boolean enabled = true;
 
+	@Tunable("Allow Source movement on multiplayer servers. Off by default: to a server's anti-cheat this "
+			+ "movement is indistinguishable from a speed hack, and players get kicked or banned for it. Turn "
+			+ "it on only for servers that permit it. Singleplayer and hosting a LAN world always work.")
+	public boolean allowOnServers = false;
+
 	@Tunable("Show the speedometer / hop timing HUD. Off by default -- it is a practice aid, not "
 			+ "something you want cluttering the screen while playing. Toggle with the '[' key.")
 	public boolean hud = false;

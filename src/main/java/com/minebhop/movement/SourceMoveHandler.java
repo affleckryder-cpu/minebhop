@@ -4,6 +4,7 @@ import com.minebhop.MineBhop;
 import com.minebhop.config.BhopConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Input;
@@ -35,9 +36,21 @@ public final class SourceMoveHandler {
 
 	private static float prevYaw;
 	private static boolean hasPrevYaw;
+	private static boolean serverNoticeShown;
 
-	public static void resetYawTracking() {
+	/** Called between worlds, so each session starts with fresh per-world state. */
+	public static void resetForNewWorld() {
 		hasPrevYaw = false;
+		serverNoticeShown = false;
+	}
+
+	/**
+	 * Whether Source movement may run in this session at all: always in singleplayer and for a LAN
+	 * host (both run an integrated server in this JVM), and on any other server only once the player
+	 * opts in -- to a server's anti-cheat this movement is indistinguishable from a speed hack.
+	 */
+	public static boolean allowedHere() {
+		return Minecraft.getInstance().hasSingleplayerServer() || MineBhop.config().allowOnServers;
 	}
 
 	/**
@@ -54,6 +67,15 @@ public final class SourceMoveHandler {
 			return false;
 		}
 		if (player != Minecraft.getInstance().player) {
+			return false;
+		}
+		if (!allowedHere()) {
+			if (!serverNoticeShown) {
+				serverNoticeShown = true;
+				player.sendSystemMessage(Component.literal("[MineBhop] Source movement is off on multiplayer "
+						+ "servers, where anti-cheat sees it as a speed hack. If this server allows it: "
+						+ "/bhop set allowOnServers true"));
+			}
 			return false;
 		}
 		if (player.onClimbable() && !config.sourceLadders) {

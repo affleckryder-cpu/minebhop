@@ -92,7 +92,7 @@ public class MineBhopNeoForge {
 			if (client.player == null) {
 				// Between worlds: drop the hop chain and the stale yaw sample.
 				MineBhop.state().reset();
-				SourceMoveHandler.resetYawTracking();
+				SourceMoveHandler.resetForNewWorld();
 				return;
 			}
 

@@ -3,6 +3,7 @@ package com.minebhop.hud;
 import com.minebhop.MineBhop;
 import com.minebhop.config.BhopConfig;
 import com.minebhop.movement.MovementState;
+import com.minebhop.movement.SourceMoveHandler;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -38,7 +39,7 @@ public final class SpeedometerRenderer {
 		Minecraft client = Minecraft.getInstance();
 		BhopConfig config = MineBhop.config();
 
-		if (!config.hud || !config.enabled) {
+		if (!config.hud || !config.enabled || !SourceMoveHandler.allowedHere()) {
 			return;
 		}
 		LocalPlayer player = client.player;

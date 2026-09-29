@@ -290,10 +290,12 @@ it to `/bhop set`, `/bhop get`, `/bhop list` and tab completion.
 
 ## Limits worth knowing
 
-- **Client side only.** The server gets ordinary movement packets. Vanilla's "moved too
-  quickly" check is skipped for the singleplayer host and its threshold (10 blocks/tick) is
-  far above anything this produces, so singleplayer and LAN are fine. Servers running an
-  anticheat plugin will flag it — this is a movement mod, treat it as singleplayer content.
+- **Off on multiplayer servers by default.** The mod is client side only, so a server just sees
+  unusually fast movement packets — to an anti-cheat plugin that is a speed hack, and players get
+  kicked or banned for it. So Source movement only runs in singleplayer and when you host a LAN
+  world; on any other server it stays off and tells you once in chat. If a server allows it,
+  `/bhop set allowOnServers true` turns it on everywhere. (Vanilla's own "moved too quickly"
+  check isn't the problem: its threshold is 10 blocks/tick, far above anything this produces.)
 - **Fall damage** is suppressed by default (`disableFallDamage`), because Minecraft
   accumulates fall distance over hop chains in a way Source does not. Damage is decided by the
   authoritative side, so cancelling it on the client alone would do nothing — but in

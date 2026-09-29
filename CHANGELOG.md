@@ -3,6 +3,19 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## 1.2.0
+
+### Changed
+- **Source movement is now off on multiplayer servers by default.** To a server's anti-cheat it
+  is indistinguishable from a speed hack, and players were at risk of being kicked or banned on
+  servers they joined without thinking about it. It still runs in singleplayer and when you host
+  a LAN world. On any other server it stays off and says so once in chat; if the server allows
+  it, `/bhop set allowOnServers true` turns it back on.
+
+### Added
+- Links to the source code and issue tracker in the mod metadata, so players can reach them from
+  their launcher's mod list.
+
 ## 1.1.0
 
 ### Added

@@ -40,9 +40,13 @@ foreach ($mc in $Versions) {
         Write-Host "=== $($loader.Name) / Minecraft $mc ===" -ForegroundColor Cyan
         Push-Location $loader.Dir
         try {
+            # Gradle and javac write notes to stderr. Under 'Stop', Windows PowerShell turns those
+            # into terminating errors whenever the caller redirects stderr, so judge by exit code.
+            $ErrorActionPreference = 'Continue'
             & .\gradlew.bat build "-Pmc=$mc" --console=plain
             $ok = ($LASTEXITCODE -eq 0)
         } finally {
+            $ErrorActionPreference = 'Stop'
             Pop-Location
         }
 
