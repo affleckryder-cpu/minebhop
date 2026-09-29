@@ -43,12 +43,8 @@ Needs **JDK 25**:
 winget install EclipseAdoptium.Temurin.25.JDK
 ```
 
-The repo deliberately does not ship `gradle-wrapper.jar`. Run the bootstrap once — it fetches
-Gradle 9.5.1 from the official distribution site and generates a real wrapper:
-
-```bash
-powershell -ExecutionPolicy Bypass -File .\bootstrap.ps1
-```
+The Gradle wrapper is checked in, so nothing else needs installing: `.\gradlew.bat` on Windows or
+`./gradlew` on macOS/Linux downloads Gradle 9.5.1 on first run.
 
 ### Everything at once
 
