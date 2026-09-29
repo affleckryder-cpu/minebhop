@@ -1,12 +1,14 @@
 modLoader="javafml"
 loaderVersion="[1,)"
 license="${mod_license}"
+issueTrackerURL="https://github.com/affleckryder-cpu/minebhop/issues"
 
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="ryder"
+displayURL="https://github.com/affleckryder-cpu/minebhop"
 description='''
 Replaces Minecraft's player movement with a port of Source engine movement: ground friction and
 acceleration, air acceleration with the 30 u/s air speed cap, bunny hopping with configurable
