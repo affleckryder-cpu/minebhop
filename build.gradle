@@ -1,0 +1,86 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+// ---------------------------------------------------------------------------
+// Minecraft version selection
+//
+//   gradlew build              -> 26.2 (default)
+//   gradlew build -Pmc=26.3    -> 26.3
+//
+// Each version gets its own build directory, so switching never leaves classes compiled against
+// one version sitting in the other's jar. That matters here: InputConstants.KEY_* are inlined
+// constants, and 26.3's switch to SDL3 changed their values.
+// ---------------------------------------------------------------------------
+def mc = (project.findProperty('mc') ?: '26.2').toString()
+def versionFile = file("versions/${mc}.properties")
+if (!versionFile.exists()) {
+	throw new GradleException("No versions/${mc}.properties -- supported: " +
+			file('versions').list().findAll { it.endsWith('.properties') }.collect { it - '.properties' }.sort().join(', '))
+}
+def mcProps = new Properties()
+versionFile.withInputStream { mcProps.load(it) }
+
+layout.buildDirectory = layout.projectDirectory.dir("build/${mc}")
+
+version = "${project.mod_version}+${mcProps.minecraft_version}"
+group = project.maven_group
+
+base {
+	archivesName = 'minebhop-fabric'
+}
+
+repositories {
+	// Loom adds the Minecraft / Fabric repositories automatically.
+}
+
+loom {
+	runs {
+		client {
+			// Separate game directory per Minecraft version: a world opened in 26.3 cannot be
+			// opened again in 26.2.
+			runDir = mc == '26.2' ? 'run' : "run-${mc}"
+		}
+	}
+}
+
+dependencies {
+	// No `mappings` line: Loom 1.17 defaults to official Mojang mappings, which is what
+	// Minecraft 26.x uses (Yarn has no builds for it).
+	minecraft "com.mojang:minecraft:${mcProps.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${mcProps.fabric_loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${mcProps.fabric_api_version}"
+}
+
+processResources {
+	def expansions = [
+			version            : project.version,
+			loader_version     : mcProps.fabric_loader_version,
+			minecraft_dependency: mcProps.fabric_minecraft_dependency,
+	]
+	inputs.properties expansions
+
+	filesMatching("fabric.mod.json") {
+		expand expansions
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = 'UTF-8'
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from("LICENSE") {
+		rename { "${it}_$projectName" }
+	}
+}

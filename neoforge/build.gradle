@@ -1,0 +1,95 @@
+plugins {
+	id 'java-library'
+	id 'net.neoforged.moddev' version '2.0.147'
+}
+
+// ---------------------------------------------------------------------------
+// Minecraft version selection -- shared with the Fabric build via ../versions/<mc>.properties.
+//
+//   gradlew build              -> 26.2 (default)
+//   gradlew build -Pmc=26.3    -> 26.3
+//
+// Each version builds into its own directory; see the Fabric build.gradle for why that matters.
+// ---------------------------------------------------------------------------
+def mc = (project.findProperty('mc') ?: '26.2').toString()
+def versionFile = file("../versions/${mc}.properties")
+if (!versionFile.exists()) {
+	throw new GradleException("No ../versions/${mc}.properties -- supported: " +
+			file('../versions').list().findAll { it.endsWith('.properties') }.collect { it - '.properties' }.sort().join(', '))
+}
+def mcProps = new Properties()
+versionFile.withInputStream { mcProps.load(it) }
+
+layout.buildDirectory = layout.projectDirectory.dir("build/${mc}")
+
+version = "${mod_version}+${mcProps.minecraft_version}"
+group = mod_group_id
+
+base {
+	archivesName = "${mod_id}-neoforge"
+}
+
+// Mojang ships Java 25 with 26.2.
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+// ---------------------------------------------------------------------------
+// Shared sources
+//
+// The movement simulation, the config and every mixin are loader-agnostic and live in the Fabric
+// project next door. Both loaders run on Mojang mappings in 26.x, so that code compiles unchanged
+// here -- only the entrypoint, HUD and command glue differ, and those are the files excluded below.
+// The NeoForge equivalents live in com.minebhop.neoforge, so nothing collides.
+// ---------------------------------------------------------------------------
+sourceSets.main.java {
+	srcDir '../src/main/java'
+	exclude 'com/minebhop/fabric/**'
+	exclude 'com/minebhop/hud/SpeedHud.java'
+}
+
+sourceSets.main.resources {
+	srcDir '../src/main/resources'
+	exclude 'fabric.mod.json'
+}
+
+neoForge {
+	version = mcProps.neo_version
+
+	runs {
+		client {
+			client()
+			// A world opened in 26.3 cannot be opened again in 26.2.
+			gameDirectory = project.file(mc == '26.2' ? 'run' : "run-${mc}")
+		}
+	}
+
+	mods {
+		"${mod_id}" {
+			sourceSet(sourceSets.main)
+		}
+	}
+}
+
+// Expands ${...} in the mods.toml template.
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+	var replaceProperties = [
+			minecraft_version      : mcProps.minecraft_version,
+			minecraft_version_range: mcProps.neo_minecraft_version_range,
+			neo_version            : mcProps.neo_version,
+			neo_version_range      : mcProps.neo_version_range,
+			mod_id                 : mod_id,
+			mod_name               : mod_name,
+			mod_license            : mod_license,
+			mod_version            : project.version,
+	]
+	inputs.properties replaceProperties
+	expand replaceProperties
+	from "src/main/templates"
+	into layout.buildDirectory.dir("generated/sources/modMetadata")
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 25
+}
