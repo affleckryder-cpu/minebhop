@@ -48,6 +48,11 @@ public final class SourceMoveHandler {
 		jumpStats.cancel();
 	}
 
+	/** The last jump's stats, or null when there is none or jumpStats is off. */
+	public static JumpStats.Result lastJump() {
+		return MineBhop.config().jumpStats ? jumpStats.last() : null;
+	}
+
 	/** The server we are on runs MineBhop and has said Source movement is allowed. */
 	public static void markServerAllowed() {
 		serverAllowed = true;
@@ -142,7 +147,7 @@ public final class SourceMoveHandler {
 			jumpStats.checkContinuity(player);
 			if (grounded) {
 				// Also covers a hop taken on the landing tick: the previous jump ends here.
-				jumpStats.land(player);
+				jumpStats.land(player, !config.hud);
 			}
 		} else {
 			jumpStats.cancel();

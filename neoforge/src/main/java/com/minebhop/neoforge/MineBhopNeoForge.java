@@ -3,6 +3,7 @@ package com.minebhop.neoforge;
 import com.minebhop.MineBhop;
 import com.minebhop.command.BhopCommand;
 import com.minebhop.config.BhopMode;
+import com.minebhop.hud.SpeedometerRenderer;
 import com.minebhop.movement.SourceMoveHandler;
 import com.minebhop.net.BhopAllowedPayload;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -20,6 +21,7 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
@@ -70,6 +72,8 @@ public class MineBhopNeoForge {
 		// CAMERA_OVERLAYS is NeoForge's equivalent of the slot Fabric calls MISC_OVERLAYS.
 		event.registerAbove(VanillaGuiLayers.CAMERA_OVERLAYS, MineBhop.id("speedometer"),
 				new NeoForgeSpeedHud());
+		event.registerAbove(VanillaGuiLayers.CONTEXTUAL_INFO_BAR, MineBhop.id("xp_bar_speed"),
+				SpeedometerRenderer::drawXpBar);
 	}
 
 	/** Game bus: command registration and per-tick keybind handling. */
@@ -91,6 +95,14 @@ public class MineBhopNeoForge {
 					source.sendFailure(Component.literal(message));
 				}
 			});
+		}
+
+		/** While speed is on the XP bar, vanilla's level number would show through next to ours. */
+		@SubscribeEvent
+		static void onRenderLayer(RenderGuiLayerEvent.Pre event) {
+			if (event.getName().equals(VanillaGuiLayers.EXPERIENCE_LEVEL) && SpeedometerRenderer.xpBarActive()) {
+				event.setCanceled(true);
+			}
 		}
 
 		@SubscribeEvent

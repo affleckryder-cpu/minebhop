@@ -8,10 +8,18 @@ and both loaders — only the compatibility metadata differs.
 ### Added
 - **Jump stats** (`jumpStats`, off by default). After every jump, chat shows KZ-style stats:
   distance edge to edge, speed at takeoff, top speed in the air, strafe count, sync, and the
-  height difference when you land higher or lower.
+  height difference when you land higher or lower. Sync is averaged over the hop chain. With the
+  HUD on, the stats show there instead of in chat.
+- **XP bar speedometer** (`xpBarSpeed`, off by default). While you move, the XP bar fills with
+  your speed toward 1000 u/s, running green to yellow to red, and the level number shows u/s.
+  Standing still, your normal XP shows.
 - **Server support.** Install the same jar on a Fabric or NeoForge server and players who have
   the mod get Source movement there automatically, with no `/bhop set allowOnServers`. Players
   without the mod can still join as normal.
+
+### Changed
+- **Redesigned HUD.** A compact panel with a hop status line and, with `jumpStats` on, the last
+  jump as a small grid. Speed moved to the XP bar speedometer.
 
 ## 1.2.0
 

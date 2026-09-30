@@ -26,9 +26,15 @@ public class BhopConfig {
 			+ "something you want cluttering the screen while playing. Toggle with the '[' key.")
 	public boolean hud = false;
 
+	@Tunable("Show your speed on the XP bar while moving: the bar fills toward 1000 u/s and runs green to "
+			+ "yellow to red, and the level number shows u/s. Standing still, your normal XP shows. Works "
+			+ "alongside or instead of the speedometer (hud).")
+	public boolean xpBarSpeed = false;
+
 	@Tunable("Print KZ-style stats in chat after every jump: distance (edge to edge, like KZ), speed at "
 			+ "takeoff, top speed in the air, strafe count and sync -- the share of mouse turns that went "
-			+ "toward the strafe key you held. Off by default, since bhopping prints a line per hop.")
+			+ "toward the strafe key you held, averaged over the hop chain. With the HUD on, the stats show "
+			+ "there instead of in chat. Off by default, since bhopping prints a line per hop.")
 	public boolean jumpStats = false;
 
 	@Tunable("Suppress fall damage entirely. Off by default -- fall damage is part of the game, and "

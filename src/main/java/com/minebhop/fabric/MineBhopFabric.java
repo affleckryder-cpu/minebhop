@@ -4,6 +4,7 @@ import com.minebhop.MineBhop;
 import com.minebhop.command.BhopCommand;
 import com.minebhop.config.BhopMode;
 import com.minebhop.hud.SpeedHud;
+import com.minebhop.hud.SpeedometerRenderer;
 import com.minebhop.movement.SourceMoveHandler;
 import com.minebhop.net.BhopAllowedPayload;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -54,6 +55,14 @@ public class MineBhopFabric implements ClientModInitializer {
 
 		HudElementRegistry.attachElementAfter(
 				VanillaHudElements.MISC_OVERLAYS, MineBhop.id("speedometer"), new SpeedHud());
+		HudElementRegistry.attachElementAfter(
+				VanillaHudElements.INFO_BAR, MineBhop.id("xp_bar_speed"), SpeedometerRenderer::drawXpBar);
+		// While speed is on the XP bar, vanilla's level number would show through next to ours.
+		HudElementRegistry.replaceElement(VanillaHudElements.EXPERIENCE_LEVEL, original -> (graphics, delta) -> {
+			if (!SpeedometerRenderer.xpBarActive()) {
+				original.extractRenderState(graphics, delta);
+			}
+		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(MineBhopFabric::onEndTick);
 

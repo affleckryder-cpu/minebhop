@@ -14,7 +14,8 @@ import java.util.Locale;
  * <p>Distance follows the KZ convention of adding the player's width, so the number is the gap
  * you could clear edge to edge rather than how far your centre travelled. Sync is the share of
  * turning ticks where the mouse moved toward the held strafe key -- turning right while holding
- * right is what air acceleration rewards, so a high number means clean strafes.
+ * right is what air acceleration rewards, so a high number means clean strafes. It is averaged over
+ * the current hop chain.
  */
 public final class JumpStats {
 
@@ -27,6 +28,12 @@ public final class JumpStats {
 	private int lastSide;
 	private int turningTicks;
 	private int syncedTicks;
+
+	// Sync is reported as the average over the current hop chain, weighted by ticks, so one short
+	// hop cannot swing it. A chain ends when you stay on the ground instead of hopping on landing.
+	private int chainTurningTicks;
+	private int chainSyncedTicks;
+	private int landedTick = Integer.MIN_VALUE;
 
 	public void cancel() {
 		active = false;
@@ -44,6 +51,10 @@ public final class JumpStats {
 	}
 
 	public void takeoff(LocalPlayer player, double horizontalSpeed) {
+		if (player.tickCount - landedTick > 1) {
+			chainTurningTicks = 0;
+			chainSyncedTicks = 0;
+		}
 		active = true;
 		takeoff = player.position();
 		preSpeed = horizontalSpeed;
@@ -76,8 +87,24 @@ public final class JumpStats {
 		maxSpeed = Math.max(maxSpeed, horizontalSpeed);
 	}
 
-	/** Reports the jump in progress, if any, as landed at the player's current position. */
-	public void land(LocalPlayer player) {
+	/** One finished jump. Distance and height in blocks, speeds in u/s, sync in percent. */
+	public record Result(double distance, double preSpeed, double maxSpeed, int strafes, int sync, double height) {
+	}
+
+	private Result last;
+
+	/** The most recent jump, for the HUD; null before the first landing. */
+	public Result last() {
+		return last;
+	}
+
+	/**
+	 * Reports the jump in progress, if any, as landed at the player's current position.
+	 *
+	 * @param toChat also print it in chat. Off while the HUD is up, which shows it instead: the
+	 *               chat lines are long enough to run underneath the speedometer.
+	 */
+	public void land(LocalPlayer player, boolean toChat) {
 		if (!active) {
 			return;
 		}
@@ -88,7 +115,15 @@ public final class JumpStats {
 		double dz = landing.z - takeoff.z;
 		double distance = Math.sqrt(dx * dx + dz * dz) + player.getBbWidth();
 		double height = landing.y - takeoff.y;
-		int sync = turningTicks == 0 ? 0 : Math.round(100.0f * syncedTicks / turningTicks);
+		landedTick = player.tickCount;
+		chainTurningTicks += turningTicks;
+		chainSyncedTicks += syncedTicks;
+		int sync = chainTurningTicks == 0 ? 0 : Math.round(100.0f * chainSyncedTicks / chainTurningTicks);
+
+		last = new Result(distance, preSpeed, maxSpeed, strafes, sync, height);
+		if (!toChat) {
+			return;
+		}
 
 		MutableComponent line = Component.literal("[MineBhop] ").withStyle(ChatFormatting.DARK_GRAY)
 				.append(Component.literal(String.format(Locale.ROOT, "%.2f blocks", distance)).withStyle(ChatFormatting.AQUA))

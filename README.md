@@ -128,8 +128,13 @@ paid no friction at all.
 
 Distance is edge to edge, like KZ: your travel plus your width, so it is the gap you could clear.
 `pre` is your speed at takeoff and `max` your top speed in the air. `sync` is the share of mouse
-turns that went toward the strafe key you held. `height` appears when you land above or below
-where you took off.
+turns that went toward the strafe key you held, averaged over your current hop chain. `height`
+appears when you land above or below where you took off. With the HUD on (`[`), the last jump
+shows there instead of in chat.
+
+`/bhop set xpBarSpeed true` turns the XP bar into a speedometer while you move: it fills toward
+1000 u/s, runs green to yellow to red, and the level number shows your speed. Standing still, your
+normal XP shows.
 
 ## How to actually gain speed
 
