@@ -37,22 +37,30 @@ public final class SourceMoveHandler {
 	private static float prevYaw;
 	private static boolean hasPrevYaw;
 	private static boolean serverNoticeShown;
+	private static boolean serverAllowed;
 	private static final JumpStats jumpStats = new JumpStats();
 
 	/** Called between worlds, so each session starts with fresh per-world state. */
 	public static void resetForNewWorld() {
 		hasPrevYaw = false;
 		serverNoticeShown = false;
+		serverAllowed = false;
 		jumpStats.cancel();
+	}
+
+	/** The server we are on runs MineBhop and has said Source movement is allowed. */
+	public static void markServerAllowed() {
+		serverAllowed = true;
 	}
 
 	/**
 	 * Whether Source movement may run in this session at all: always in singleplayer and for a LAN
-	 * host (both run an integrated server in this JVM), and on any other server only once the player
-	 * opts in -- to a server's anti-cheat this movement is indistinguishable from a speed hack.
+	 * host (both run an integrated server in this JVM), on a server that runs MineBhop itself, and on
+	 * any other server only once the player opts in -- to a server's anti-cheat this movement is
+	 * indistinguishable from a speed hack.
 	 */
 	public static boolean allowedHere() {
-		return Minecraft.getInstance().hasSingleplayerServer() || MineBhop.config().allowOnServers;
+		return Minecraft.getInstance().hasSingleplayerServer() || serverAllowed || MineBhop.config().allowOnServers;
 	}
 
 	/**

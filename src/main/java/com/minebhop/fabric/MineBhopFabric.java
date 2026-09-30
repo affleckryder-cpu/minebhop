@@ -5,8 +5,10 @@ import com.minebhop.command.BhopCommand;
 import com.minebhop.config.BhopMode;
 import com.minebhop.hud.SpeedHud;
 import com.minebhop.movement.SourceMoveHandler;
+import com.minebhop.net.BhopAllowedPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -54,6 +56,9 @@ public class MineBhopFabric implements ClientModInitializer {
 				VanillaHudElements.MISC_OVERLAYS, MineBhop.id("speedometer"), new SpeedHud());
 
 		ClientTickEvents.END_CLIENT_TICK.register(MineBhopFabric::onEndTick);
+
+		ClientPlayNetworking.registerGlobalReceiver(BhopAllowedPayload.TYPE,
+				(payload, context) -> SourceMoveHandler.markServerAllowed());
 	}
 
 	private static void onEndTick(Minecraft client) {

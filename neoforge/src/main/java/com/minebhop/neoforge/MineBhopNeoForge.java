@@ -4,6 +4,7 @@ import com.minebhop.MineBhop;
 import com.minebhop.command.BhopCommand;
 import com.minebhop.config.BhopMode;
 import com.minebhop.movement.SourceMoveHandler;
+import com.minebhop.net.BhopAllowedPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -21,6 +22,7 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 
 /**
  * NeoForge entrypoint.
@@ -50,6 +52,11 @@ public class MineBhopNeoForge {
 
 		modEventBus.addListener(MineBhopNeoForge::onRegisterKeyMappings);
 		modEventBus.addListener(MineBhopNeoForge::onRegisterGuiLayers);
+		modEventBus.addListener(MineBhopNeoForge::onRegisterPayloadHandlers);
+	}
+
+	private static void onRegisterPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
+		event.register(BhopAllowedPayload.TYPE, (payload, context) -> SourceMoveHandler.markServerAllowed());
 	}
 
 	private static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {

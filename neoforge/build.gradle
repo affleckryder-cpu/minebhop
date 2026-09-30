@@ -59,6 +59,14 @@ neoForge {
 			client()
 			// A world opened in 26.3 cannot be opened again in 26.2.
 			gameDirectory = project.file(mc == '26.2' ? 'run' : "run-${mc}")
+			// MDG has no --args; e.g. -PclientArgs="--quickPlayMultiplayer 127.0.0.1:25565"
+			if (project.hasProperty('clientArgs')) {
+				programArguments.addAll(project.property('clientArgs').toString().split(' ') as List)
+			}
+		}
+		server {
+			server()
+			gameDirectory = project.file("run-server-${mc}")
 		}
 	}
 

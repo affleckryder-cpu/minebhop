@@ -13,8 +13,11 @@
 		"issues": "https://github.com/affleckryder-cpu/minebhop/issues"
 	},
 	"license": "MIT",
-	"environment": "client",
+	"environment": "*",
 	"entrypoints": {
+		"main": [
+			"com.minebhop.fabric.MineBhopFabricCommon"
+		],
 		"client": [
 			"com.minebhop.fabric.MineBhopFabric"
 		]

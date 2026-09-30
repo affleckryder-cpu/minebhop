@@ -9,6 +9,9 @@ and both loaders — only the compatibility metadata differs.
 - **Jump stats** (`jumpStats`, off by default). After every jump, chat shows KZ-style stats:
   distance edge to edge, speed at takeoff, top speed in the air, strafe count, sync, and the
   height difference when you land higher or lower.
+- **Server support.** Install the same jar on a Fabric or NeoForge server and players who have
+  the mod get Source movement there automatically, with no `/bhop set allowOnServers`. Players
+  without the mod can still join as normal.
 
 ## 1.2.0
 

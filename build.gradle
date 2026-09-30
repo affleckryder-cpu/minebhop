@@ -41,6 +41,9 @@ loom {
 			// opened again in 26.2.
 			runDir = mc == '26.2' ? 'run' : "run-${mc}"
 		}
+		server {
+			runDir = "run-server-${mc}"
+		}
 	}
 }
 

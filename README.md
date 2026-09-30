@@ -301,12 +301,14 @@ it to `/bhop set`, `/bhop get`, `/bhop list` and tab completion.
 
 ## Limits worth knowing
 
-- **Off on multiplayer servers by default.** The mod is client side only, so a server just sees
-  unusually fast movement packets — to an anti-cheat plugin that is a speed hack, and players get
-  kicked or banned for it. So Source movement only runs in singleplayer and when you host a LAN
-  world; on any other server it stays off and tells you once in chat. If a server allows it,
-  `/bhop set allowOnServers true` turns it on everywhere. (Vanilla's own "moved too quickly"
-  check isn't the problem: its threshold is 10 blocks/tick, far above anything this produces.)
+- **Off on multiplayer servers by default,** unless the server runs MineBhop too. To a server
+  without it, Source movement is just unusually fast movement packets — to an anti-cheat plugin
+  that is a speed hack, and players get kicked or banned for it. So it runs in singleplayer, when
+  you host a LAN world, and on servers with the mod installed (the server tells your client on
+  join; players without the mod can still join). Anywhere else it stays off and tells you once in
+  chat; `/bhop set allowOnServers true` turns it on regardless. (Vanilla's own "moved too
+  quickly" check isn't the problem: its threshold is 10 blocks/tick, far above anything this
+  produces, and a test on a vanilla server logged no movement warnings at all.)
 - **Fall damage** can be suppressed with `disableFallDamage` (off by default), because Minecraft
   accumulates fall distance over hop chains in a way Source does not. Damage is decided by the
   authoritative side, so cancelling it on the client alone would do nothing — but in
