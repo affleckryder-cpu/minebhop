@@ -120,6 +120,17 @@ the hop timing line: hop streak, **ground ticks on the last hop**, and speed gai
 Ground ticks is the number to watch — `0t` means you left on the same tick you landed and
 paid no friction at all.
 
+`/bhop set jumpStats true` prints KZ-style stats in chat after every jump:
+
+```
+[MineBhop] 7.89 blocks | pre 372 | max 417 | strafes 2 | sync 100%
+```
+
+Distance is edge to edge, like KZ: your travel plus your width, so it is the gap you could clear.
+`pre` is your speed at takeoff and `max` your top speed in the air. `sync` is the share of mouse
+turns that went toward the strafe key you held. `height` appears when you land above or below
+where you took off.
+
 ## How to actually gain speed
 
 1. `/bhop mode AUTO` and hold space. Auto mode hops on every landing, so you can ignore
@@ -296,7 +307,7 @@ it to `/bhop set`, `/bhop get`, `/bhop list` and tab completion.
   world; on any other server it stays off and tells you once in chat. If a server allows it,
   `/bhop set allowOnServers true` turns it on everywhere. (Vanilla's own "moved too quickly"
   check isn't the problem: its threshold is 10 blocks/tick, far above anything this produces.)
-- **Fall damage** is suppressed by default (`disableFallDamage`), because Minecraft
+- **Fall damage** can be suppressed with `disableFallDamage` (off by default), because Minecraft
   accumulates fall distance over hop chains in a way Source does not. Damage is decided by the
   authoritative side, so cancelling it on the client alone would do nothing — but in
   singleplayer and on a LAN world the integrated server lives in the same JVM, so its

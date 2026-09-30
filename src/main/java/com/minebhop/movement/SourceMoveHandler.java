@@ -37,11 +37,13 @@ public final class SourceMoveHandler {
 	private static float prevYaw;
 	private static boolean hasPrevYaw;
 	private static boolean serverNoticeShown;
+	private static final JumpStats jumpStats = new JumpStats();
 
 	/** Called between worlds, so each session starts with fresh per-world state. */
 	public static void resetForNewWorld() {
 		hasPrevYaw = false;
 		serverNoticeShown = false;
+		jumpStats.cancel();
 	}
 
 	/**
@@ -105,6 +107,7 @@ public final class SourceMoveHandler {
 		// no acceleration, no friction and no gravity.
 		boolean onLadderCooldown = state.tickLadderCooldown();
 		if (config.sourceLadders && player.onClimbable() && !onLadderCooldown) {
+			jumpStats.cancel();
 			ladderMove(player, config, state, scale);
 			return;
 		}
@@ -127,6 +130,15 @@ public final class SourceMoveHandler {
 
 		// --- CheckJumpButton, ahead of friction so a perfect hop keeps its speed ---
 		boolean jumped = state.decideJump(keys.jump(), grounded, config);
+		if (config.jumpStats) {
+			jumpStats.checkContinuity(player);
+			if (grounded) {
+				// Also covers a hop taken on the landing tick: the previous jump ends here.
+				jumpStats.land(player);
+			}
+		} else {
+			jumpStats.cancel();
+		}
 		if (jumped) {
 			if (!config.enableBunnyHopping) {
 				SourceMovement.preventBunnyJumping(velocity, config.maxSpeed, config.bhopSpeedCap);
@@ -134,6 +146,9 @@ public final class SourceMoveHandler {
 			velocity.y = config.jumpImpulse;
 			// Source clears the ground entity here, so this tick runs as an air tick.
 			grounded = false;
+			if (config.jumpStats) {
+				jumpStats.takeoff(player, velocity.horizontalSpeed());
+			}
 		}
 		state.breakStreakOnLanding(grounded, config);
 
@@ -194,6 +209,9 @@ public final class SourceMoveHandler {
 		player.setDeltaMovement(velocity.x / scale, velocity.y / scale, velocity.z / scale);
 
 		state.recordSpeed(velocity.horizontalSpeed());
+		if (!grounded && config.jumpStats) {
+			jumpStats.airTick(Mth.wrapDegrees(currentYaw - prevYaw), sideMove, velocity.horizontalSpeed());
+		}
 		prevYaw = currentYaw;
 	}
 

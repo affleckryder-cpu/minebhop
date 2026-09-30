@@ -3,6 +3,13 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## Unreleased
+
+### Added
+- **Jump stats** (`jumpStats`, off by default). After every jump, chat shows KZ-style stats:
+  distance edge to edge, speed at takeoff, top speed in the air, strafe count, sync, and the
+  height difference when you land higher or lower.
+
 ## 1.2.0
 
 ### Changed
