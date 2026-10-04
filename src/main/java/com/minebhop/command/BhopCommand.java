@@ -60,7 +60,7 @@ public final class BhopCommand {
 	private static <S> SuggestionProvider<S> presets() {
 		return (context, builder) -> {
 			String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
-			for (String preset : BhopConfig.presetNames()) {
+			for (String preset : MineBhop.configManager().presetNames()) {
 				if (preset.startsWith(remaining)) {
 					builder.suggest(preset);
 				}
@@ -107,13 +107,37 @@ public final class BhopCommand {
 								})))
 
 				.then(BhopCommand.<S>literal("preset")
+						.then(BhopCommand.<S>literal("save")
+								.then(BhopCommand.<S>word("name").executes(context -> {
+									String name = StringArgumentType.getString(context, "name");
+									String problem = MineBhop.configManager().savePreset(name);
+									if (problem != null) {
+										return error(context, feedback, problem);
+									}
+									feedback.send(context.getSource(), "Saved preset " + name.toLowerCase(Locale.ROOT));
+									return 1;
+								})))
+						.then(BhopCommand.<S>literal("delete")
+								.then(BhopCommand.<S>word("name")
+										.suggests((context, builder) -> {
+											MineBhop.configManager().customPresetNames().forEach(builder::suggest);
+											return builder.buildFuture();
+										})
+										.executes(context -> {
+											String name = StringArgumentType.getString(context, "name");
+											if (!MineBhop.configManager().deletePreset(name)) {
+												return error(context, feedback, "No custom preset called " + name);
+											}
+											feedback.send(context.getSource(), "Deleted preset " + name.toLowerCase(Locale.ROOT));
+											return 1;
+										})))
 						.then(BhopCommand.<S>word("name")
 								.suggests(presets())
 								.executes(context -> {
 									String name = StringArgumentType.getString(context, "name");
-									if (!MineBhop.config().applyPreset(name)) {
+									if (!MineBhop.configManager().applyPreset(name)) {
 										return error(context, feedback, "Unknown preset. Try one of: "
-												+ String.join(", ", BhopConfig.presetNames()));
+												+ String.join(", ", MineBhop.configManager().presetNames()));
 									}
 									MineBhop.state().reset();
 									return saveAndReport(context, feedback,

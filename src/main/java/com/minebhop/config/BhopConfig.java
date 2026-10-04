@@ -57,40 +57,51 @@ public class BhopConfig {
 	// ------------------------------------------------------------------
 
 	@Tunable(value = "Ground running speed.", unit = "u/s", cvar = "sv_maxspeed", section = "Movement")
+	@Range(min = 100, max = 400)
 	public double maxSpeed = 250.0;
 
 	@Tunable(value = "Ground acceleration factor.", cvar = "sv_accelerate")
+	@Range(min = 1, max = 20)
 	public double acceleration = 5.5;
 
 	@Tunable(value = "Air acceleration factor. This is what makes strafing gain speed.", cvar = "sv_airaccelerate")
+	@Range(min = 0, max = 200)
 	public double airAcceleration = 12.0;
 
 	@Tunable(value = "Ground friction. Applied only on ticks where you are grounded and did not jump.", cvar = "sv_friction")
+	@Range(min = 1, max = 15)
 	public double friction = 5.2;
 
 	@Tunable(value = "Below this speed, friction is applied as if you were moving at this speed. "
 			+ "Produces the sharp stop at low speed.", unit = "u/s", cvar = "sv_stopspeed")
+	@Range(min = 0, max = 200)
 	public double stopSpeed = 80.0;
 
 	@Tunable(value = "The air speed cap. Per tick, air acceleration can only add speed until your "
 			+ "velocity projected onto the wish direction reaches this. The single most important "
 			+ "number in Source movement -- raising it makes strafing gain speed absurdly fast.", unit = "u/s")
+	@Range(min = 10, max = 60)
 	public double airSpeedCap = 30.0;
 
 	@Tunable(value = "Gravity.", unit = "u/s^2", cvar = "sv_gravity")
+	@Range(min = 200, max = 1600)
 	public double gravity = 800.0;
 
 	@Tunable(value = "Upward velocity applied on jump. 301.993 = sqrt(2 * 800 * 57), a 57 unit jump.",
 			unit = "u/s")
+	@Range(min = 150, max = 450)
 	public double jumpImpulse = 301.993;
 
 	@Tunable(value = "Hard clamp on any single velocity axis.", unit = "u/s", cvar = "sv_maxvelocity")
+	@Range(min = 500, max = 3500)
 	public double maxVelocity = 3500.0;
 
 	@Tunable(value = "Surface friction multiplier, scales both friction and acceleration.")
+	@Range(min = 0.25, max = 2)
 	public double surfaceFriction = 1.0;
 
 	@Tunable("Speed multiplier while crouching (sneak key).")
+	@Range(min = 0.1, max = 1)
 	public double duckSpeedMultiplier = 0.34;
 
 	// ------------------------------------------------------------------
@@ -106,6 +117,7 @@ public class BhopConfig {
 	public boolean enableBunnyHopping = true;
 
 	@Tunable("Speed clamp on jump as a multiple of maxSpeed, used only when enableBunnyHopping is false.")
+	@Range(min = 1, max = 2)
 	public double bhopSpeedCap = 1.2;
 
 	// ------------------------------------------------------------------
@@ -115,17 +127,21 @@ public class BhopConfig {
 	@Tunable(value = "Ticks you must already have been grounded before a hop fires. 0 hops on the very tick "
 			+ "you land, which skips ground friction entirely and preserves all your speed.",
 			section = "Hop timing")
+	@Range(min = 0, max = 10)
 	public int autoHopDelayTicks = 0;
 
 	@Tunable("Input buffer. A jump pressed this many ticks before touching the ground still hops on "
 			+ "landing, instead of being eaten. MANUAL mode only.")
+	@Range(min = 0, max = 10)
 	public int jumpBufferTicks = 3;
 
 	@Tunable("A hop leaving the ground within this many ticks of landing counts as perfect and is "
 			+ "reported as such on the HUD. Purely feedback -- speed retention is decided by physics.")
+	@Range(min = 0, max = 5)
 	public int perfectHopWindowTicks = 1;
 
 	@Tunable("Minimum ticks between two hops. 0 for no cooldown.")
+	@Range(min = 0, max = 20)
 	public int minTicksBetweenHops = 0;
 
 	// ------------------------------------------------------------------
@@ -141,21 +157,25 @@ public class BhopConfig {
 
 	@Tunable(value = "Ladder climb speed. Applied directly with no acceleration, the way Source does "
 			+ "it. Minecraft's own climb is about 157 u/s for comparison.", unit = "u/s")
+	@Range(min = 50, max = 400)
 	public double ladderClimbSpeed = 200.0;
 
 	@Tunable(value = "Speed of the push away from a ladder when you jump off it. Directed along the "
 			+ "ladder's facing, with no upward component, so you drop as you leave -- as in Source.",
 			unit = "u/s")
+	@Range(min = 0, max = 500)
 	public double ladderDismountSpeed = 270.0;
 
 	@Tunable("Ticks after jumping off a ladder during which you cannot re-grab it. Without this you "
 			+ "would immediately reattach, since you are still inside the ladder's block.")
+	@Range(min = 0, max = 40)
 	public int ladderGrabCooldownTicks = 8;
 
 	@Tunable("Climb speed multiplier while holding a forward/back key AND a strafe key together -- "
 			+ "the diagonal ladder climb. sqrt(2) = 1.414 matches the length of a diagonal input "
 			+ "vector, so a diagonal climbs about 41% faster than forward alone. Set to 1.0 to "
 			+ "remove the technique; a strafe key then just slides you sideways as normal.")
+	@Range(min = 1, max = 2)
 	public double ladderDiagonalBoost = 1.414;
 
 	// ------------------------------------------------------------------
@@ -165,6 +185,7 @@ public class BhopConfig {
 	@Tunable(section = "Simulation", value = "Tickrate the air acceleration is integrated at. Minecraft runs at 20 Hz, CS:GO at 64. "
 			+ "Because the air speed cap is applied per step, a 20 Hz simulation gains speed roughly "
 			+ "3x slower than CS:GO. This sub-steps acceleration to restore the real feel.")
+	@Range(min = 20, max = 128)
 	public int simulationTickrate = 64;
 
 	@Tunable("Interpolate view yaw across the sub-steps of a tick. Air strafing gains speed from "
@@ -175,10 +196,12 @@ public class BhopConfig {
 	@Tunable("Units per block. 39.3701 maps one Source unit to one inch, which puts CS:GO's 250 u/s "
 			+ "run at 0.318 blocks/tick -- just above a Minecraft sprint. Lower it to scale the whole "
 			+ "movement model up relative to the world.")
+	@Range(min = 25, max = 50)
 	public double unitsPerBlock = 39.3701;
 
 	@Tunable(value = "Downward velocity applied while grounded so Minecraft's collision keeps "
 			+ "reporting ground contact. Has no effect on horizontal physics.", unit = "u/s")
+	@Range(min = 5, max = 50)
 	public double groundStickSpeed = 20.0;
 
 	// ------------------------------------------------------------------

@@ -3,13 +3,24 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
-## Unreleased
+## 1.4.0
 
 ### Added
-- **Settings screen.** Press `\` or run `/bhop menu`. Every setting is a toggle or a text box,
-  grouped by section, with the presets along the top and a tooltip on each control. It also
+- **Settings screen.** Press `\` or run `/bhop menu`. Every setting is a switch or a slider,
+  grouped by section, with a presets dropdown along the top and a tooltip on each control. It also
   opens from the mods list: the Config button on NeoForge, and Mod Menu's settings button on
   Fabric (Mod Menu is optional).
+- **Custom presets.** Save your current physics settings under a name and load them back, from
+  the settings screen or with `/bhop preset save <name>`. They live in
+  `config/minebhop-presets.json`, so they are easy to share. A preset holds everything outside
+  the General section, so loading one never touches your HUD or server switches.
+
+### Changed
+- **Every number now has limits.** Each setting has a minimum and maximum, wide enough for every
+  built-in preset and real experimentation, narrow enough that nothing turns the movement into
+  something unrecognisable. They apply to the sliders, `/bhop set`, custom presets and the config
+  file alike; a value outside its range in your config is pulled back in when it loads. Air
+  acceleration tops out at 200.
 
 ### Removed
 - **The `quake` preset.** It needs Quake-style strafe jumping (forward plus strafe, slow turns),

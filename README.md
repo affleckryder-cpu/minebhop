@@ -101,8 +101,9 @@ Keybinds (rebindable in Options → Controls → MineBhop):
 | `\` | Open the settings screen |
 | unbound | Cycle hop mode (manual / auto) |
 
-The settings screen has every setting as a toggle or a text box, grouped by section, with the
-presets along the top and a tooltip on each control saying what it does. It also opens
+The settings screen has every setting as a switch or a slider, grouped by section, with a presets
+dropdown along the top and a tooltip on each control saying what it does. Type a name and press
+Save to keep your current physics settings as a preset of your own. It also opens
 from the mods list: the Config button on NeoForge, and the settings button in
 [Mod Menu](https://modrinth.com/mod/modmenu) on Fabric, if you have it installed. Everything in it can be done by command too:
 
@@ -113,6 +114,8 @@ from the mods list: the Config button on NeoForge, and the settings button in
 /bhop hud                  toggle the HUD
 /bhop mode MANUAL|AUTO     hop mode
 /bhop preset <name>        csgo, css, kz, official
+/bhop preset save <name>   save your current physics settings as a preset
+/bhop preset delete <name> remove one you saved
 /bhop set <key> <value>    change any setting, with tab completion
 /bhop get <key>            value plus what it does
 /bhop list                 every setting
@@ -171,10 +174,14 @@ Turning too fast is nearly as bad as turning too slowly, exactly as in CS.
 Everything is in Source units, so the defaults are literally the CS:GO cvar values and can
 be compared against a CS config one-to-one.
 
+Every number has a minimum and maximum, shown by its slider in the settings screen and enforced
+for `/bhop set`, custom presets and the config file too. `/bhop set` tells you the range if you
+go outside it.
+
 | Setting | Default | Notes |
 |---|---|---|
 | `maxSpeed` | 250 | `sv_maxspeed`. Ground run speed |
-| `airAcceleration` | 12 | `sv_airaccelerate`. Bhop servers use 100–1000 |
+| `airAcceleration` | 12 | `sv_airaccelerate`. 0–200; the `kz` preset uses 100 |
 | `airSpeedCap` | 30 | The single most important number. Raise it and speed explodes |
 | `friction` | 5.2 | `sv_friction`. Costs ~23% of your speed per grounded tick |
 | `enableBunnyHopping` | true | Set false to reproduce official matchmaking, which clamps you to 300 u/s on every jump |

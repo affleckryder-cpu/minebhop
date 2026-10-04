@@ -4,23 +4,29 @@ import com.minebhop.MineBhop;
 import com.minebhop.config.BhopConfig;
 import com.minebhop.config.BhopMode;
 import com.minebhop.config.ConfigManager;
+import com.minebhop.config.Range;
 import com.minebhop.config.Tunable;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
-import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
 
 /**
  * The settings screen: every {@link Tunable} field as a row, grouped by section, with the presets
@@ -30,17 +36,37 @@ import java.util.List;
  * new setting shows up here without touching this class. Values go through
  * {@link ConfigManager#set}, so the screen and the command parse and validate identically. Changes
  * apply as you make them and are saved when the screen closes.
+ *
+ * <p>The widgets are drawn flat, in the HUD panel's palette, rather than with vanilla's button
+ * sprites: {@link FlatButton} and {@link Switch} override only how a button looks, so focus,
+ * narration, sounds and keyboard navigation are still vanilla's.
  */
 public class BhopConfigScreen extends Screen {
 
-	private static final int WIDGET_WIDTH = 100;
-	private static final int ROW_WIDTH = 320;
-	private static final int LIST_TOP = 50;
+	private static final int WIDGET_WIDTH = 110;
+	private static final int ROW_WIDTH = 350;
+	private static final int LIST_TOP = 54;
+	private static final int DROPDOWN_WIDTH = 120;
 	private static final int FOOTER = 34;
-	private static final int COLOUR_VALID = 0xFFE0E0E0;
-	private static final int COLOUR_INVALID = 0xFFFF5C6C;
+
+	private static final int TEXT = 0xFFFFFFFF;
+	private static final int DIM = 0xFF8A8F98;
+	private static final int ACCENT = 0xFF5CE1FF;
+	private static final int ACCENT_HOT = 0xFF8CEBFF;
+	private static final int ON_ACCENT = 0xFF0B0D12;
+	private static final int INVALID = 0xFFFF5C6C;
+	private static final int PANEL = 0xB0101218;
+	private static final int MENU = 0xF4141720;
+	private static final int SURFACE = 0xFF20242E;
+	private static final int SURFACE_HOT = 0xFF2C323F;
+	private static final int ROW_HOT = 0x14FFFFFF;
+	private static final int RULE = 0x30FFFFFF;
+	private static final int DANGER = 0xFF8A2F3A;
 
 	private final Screen parent;
+	private boolean dropdownOpen;
+	/** Set by the dropdown's own buttons, so the click that used them does not also close it. */
+	private boolean dropdownClicked;
 
 	public BhopConfigScreen(Screen parent) {
 		super(Component.literal("MineBhop Settings"));
@@ -70,34 +96,120 @@ public class BhopConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
-		// Presets and reset, centred along the top.
-		String[] presets = BhopConfig.presetNames();
-		int buttonWidth = 50;
-		int gap = 4;
-		int count = presets.length + 1;
-		int x = (width - (count * buttonWidth + (count - 1) * gap)) / 2;
-		for (String preset : presets) {
-			addRenderableWidget(Button.builder(Component.literal(preset), button -> {
-				MineBhop.config().applyPreset(preset);
-				rebuildWidgets();
-			}).bounds(x, 24, buttonWidth, 20).tooltip(Tooltip.create(Component.literal("Apply the " + preset + " preset"))).build());
-			x += buttonWidth + gap;
-		}
-		addRenderableWidget(Button.builder(Component.literal("Reset"), button -> {
-			MineBhop.configManager().reset();
+		ConfigManager manager = MineBhop.configManager();
+
+		// One row along the top: presets dropdown, reset, then a name box and Save for custom ones.
+		int y = 26;
+		int x = (width - 322) / 2;
+		addRenderableWidget(new FlatButton(x, y, DROPDOWN_WIDTH, 20,
+				Component.literal(dropdownOpen ? "Presets  ▴" : "Presets  ▾"), FlatButton.Style.NORMAL, button -> {
+			dropdownOpen = !dropdownOpen;
+			dropdownClicked = true;
 			rebuildWidgets();
-		}).bounds(x, 24, buttonWidth, 20).tooltip(Tooltip.create(Component.literal("Every setting back to default"))).build());
+		}));
+		FlatButton reset = addRenderableWidget(new FlatButton(x + 124, y, 50, 20, Component.literal("Reset"),
+				FlatButton.Style.NORMAL, button -> {
+			manager.reset();
+			rebuildWidgets();
+		}));
+		reset.setTooltip(Tooltip.create(Component.literal("Every setting back to default")));
+
+		boolean[] nameInvalid = { false };
+		EditBox name = new EditBox(font, x + 189, y + 6, 80, 14, Component.literal("Preset name"));
+		name.setBordered(false);
+		name.setMaxLength(16);
+		name.setHint(Component.literal("new preset..."));
+		name.setTooltip(Tooltip.create(Component.literal(
+				"Save your current physics settings as a preset. Everything outside General is stored.")));
+		name.setResponder(text -> nameInvalid[0] = false);
+		int boxLeft = x + 184;
+		addRenderableOnly((graphics, mouseX, mouseY, delta) ->
+				field(graphics, boxLeft, y, 90, name.isFocused(), nameInvalid[0]));
+		addRenderableWidget(name);
+		addRenderableWidget(new FlatButton(x + 278, y, 44, 20, Component.literal("Save"), FlatButton.Style.NORMAL, button -> {
+			if (manager.savePreset(name.getValue()) != null) {
+				nameInvalid[0] = true;
+				return;
+			}
+			rebuildWidgets();
+		}));
+
+		// The open dropdown overlaps the list. Screens hit-test children in the order they were
+		// added and draw them in that same order, so to be both clickable ahead of the list and
+		// drawn over it, its items are added as listeners before the list and as renderables after.
+		List<FlatButton> items = dropdownOpen ? dropdownItems(x, y + 22) : List.of();
+		items.forEach(this::addWidget);
 
 		addRenderableWidget(new SettingsList());
 
-		addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-				.bounds(width / 2 - 100, height - 27, 200, 20).build());
+		addRenderableWidget(new FlatButton(width / 2 - 100, height - 27, 200, 20, CommonComponents.GUI_DONE,
+				FlatButton.Style.PRIMARY, button -> onClose()));
+
+		if (!items.isEmpty()) {
+			int menuTop = y + 21;
+			int menuHeight = items.get(items.size() - 1).getBottom() + 1 - menuTop;
+			addRenderableOnly((graphics, mouseX, mouseY, delta) -> {
+				graphics.fill(x, menuTop, x + DROPDOWN_WIDTH, menuTop + menuHeight, MENU);
+				graphics.outline(x, menuTop, DROPDOWN_WIDTH, menuHeight, ACCENT);
+			});
+			items.forEach(this::addRenderableOnly);
+		}
+	}
+
+	/**
+	 * One button per preset, stacked under the dropdown button: built-in ones first, then saved ones,
+	 * each saved one with a small delete button beside it.
+	 */
+	// ponytail: no scrolling -- the column runs off the screen past roughly (height - 80) / 18
+	// presets. Add a scrolling list here if anyone actually saves that many.
+	private List<FlatButton> dropdownItems(int x, int y) {
+		ConfigManager manager = MineBhop.configManager();
+		List<String> custom = manager.customPresetNames();
+		List<FlatButton> items = new ArrayList<>();
+		for (String preset : manager.presetNames()) {
+			boolean deletable = custom.contains(preset);
+			items.add(new FlatButton(x + 1, y, DROPDOWN_WIDTH - 2 - (deletable ? 18 : 0), 18,
+					Component.literal(preset), FlatButton.Style.MENU, button -> {
+				manager.applyPreset(preset);
+				dropdownOpen = false;
+				dropdownClicked = true;
+				rebuildWidgets();
+			}));
+			if (deletable) {
+				FlatButton delete = new FlatButton(x + DROPDOWN_WIDTH - 19, y, 18, 18, Component.literal("✕"),
+						FlatButton.Style.DANGER, button -> {
+					manager.deletePreset(preset);
+					dropdownClicked = true;
+					rebuildWidgets();
+				});
+				delete.setTooltip(Tooltip.create(Component.literal("Delete " + preset)));
+				items.add(delete);
+			}
+			y += 18;
+		}
+		return items;
+	}
+
+	@Override
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		dropdownClicked = false;
+		boolean handled = super.mouseClicked(event, doubleClick);
+		// A click anywhere else closes the dropdown, the way one is expected to behave.
+		if (dropdownOpen && !dropdownClicked) {
+			dropdownOpen = false;
+			rebuildWidgets();
+		}
+		return handled;
 	}
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
 		super.extractRenderState(graphics, mouseX, mouseY, delta);
-		graphics.centeredText(font, title, width / 2, 9, 0xFFFFFFFF);
+		String brand = "MINEBHOP";
+		String rest = "  SETTINGS";
+		int left = (width - font.width(brand + rest)) / 2;
+		graphics.text(font, brand, left, 10, ACCENT, false);
+		graphics.text(font, rest, left + font.width(brand), 10, DIM, false);
 	}
 
 	@Override
@@ -115,6 +227,158 @@ public class BhopConfigScreen extends Screen {
 		String spaced = key.replaceAll("([a-z0-9])([A-Z])", "$1 $2");
 		return Character.toUpperCase(spaced.charAt(0)) + spaced.substring(1);
 	}
+
+	/** Background of a text field: a flat surface with an underline that shows focus or an error. */
+	private static void field(GuiGraphicsExtractor graphics, int x, int y, int width, boolean focused, boolean invalid) {
+		graphics.fill(x, y, x + width, y + 20, SURFACE);
+		graphics.fill(x, y + 19, x + width, y + 20, invalid ? INVALID : focused ? ACCENT : RULE);
+	}
+
+	// ------------------------------------------------------------------
+	// Flat widgets
+	// ------------------------------------------------------------------
+
+	/** A button drawn as a flat surface instead of vanilla's sprite. */
+	private static class FlatButton extends Button {
+		enum Style {
+			/** Dark surface, accent underline on hover. */
+			NORMAL,
+			/** Filled with the accent colour; the screen's main action. */
+			PRIMARY,
+			/** Transparent until hovered, label left-aligned; a dropdown item. */
+			MENU,
+			/** Transparent until hovered, then red; a delete button. */
+			DANGER
+		}
+
+		private final Style style;
+
+		FlatButton(int x, int y, int width, int height, Component message, Style style, OnPress onPress) {
+			super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+			this.style = style;
+		}
+
+		@Override
+		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+			boolean hot = isActive() && isHoveredOrFocused();
+			int background = switch (style) {
+				case NORMAL -> hot ? SURFACE_HOT : SURFACE;
+				case PRIMARY -> hot ? ACCENT_HOT : ACCENT;
+				case MENU -> hot ? SURFACE_HOT : 0;
+				case DANGER -> hot ? DANGER : 0;
+			};
+			if (background != 0) {
+				graphics.fill(getX(), getY(), getRight(), getBottom(), background);
+			}
+			if (style == Style.NORMAL && hot) {
+				graphics.fill(getX(), getBottom() - 1, getRight(), getBottom(), ACCENT);
+			}
+
+			int colour = !isActive() ? DIM
+					: style == Style.PRIMARY ? ON_ACCENT
+					: style == Style.DANGER && !hot ? DIM
+					: TEXT;
+			Font font = Minecraft.getInstance().font;
+			int textX = style == Style.MENU ? getX() + 7 : getX() + (getWidth() - font.width(getMessage())) / 2;
+			graphics.text(font, getMessage(), textX, getY() + (getHeight() - 8) / 2, colour, false);
+		}
+	}
+
+	/** An on/off switch: a pill with a knob that sits right when on. */
+	private static class Switch extends Button {
+		private boolean on;
+
+		Switch(int width, boolean on, Component title, Consumer<Boolean> onChange) {
+			super(0, 0, width, 20, title, button -> {
+				Switch self = (Switch) button;
+				self.on = !self.on;
+				onChange.accept(self.on);
+			}, DEFAULT_NARRATION);
+			this.on = on;
+		}
+
+		@Override
+		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+			boolean hot = isHoveredOrFocused();
+			int trackLeft = getRight() - 26;
+			int trackTop = getY() + 4;
+			graphics.fill(trackLeft, trackTop, trackLeft + 26, trackTop + 12,
+					on ? (hot ? ACCENT_HOT : ACCENT) : (hot ? SURFACE_HOT : SURFACE));
+			int knobLeft = on ? trackLeft + 15 : trackLeft + 1;
+			graphics.fill(knobLeft, trackTop + 1, knobLeft + 10, trackTop + 11, on ? ON_ACCENT : DIM);
+
+			Font font = Minecraft.getInstance().font;
+			String state = on ? "ON" : "OFF";
+			graphics.text(font, state, trackLeft - 6 - font.width(state), getY() + 6, on ? ACCENT : DIM, false);
+		}
+	}
+
+	/**
+	 * A draggable bar for a ranged number. Dragging, clicking and the arrow keys are vanilla's; this
+	 * only maps the 0..1 slider position onto the setting's range and draws it flat. The value
+	 * itself is drawn by the row, to the left of the bar.
+	 */
+	private static class FlatSlider extends AbstractSliderButton {
+		private final double min;
+		private final double max;
+		private final boolean whole;
+		private final double step;
+		private final Consumer<String> onChange;
+		private String display;
+
+		FlatSlider(int width, double min, double max, boolean whole, double current, Component title, Consumer<String> onChange) {
+			super(0, 0, width, 20, title, (Math.max(min, Math.min(max, current)) - min) / (max - min));
+			this.min = min;
+			this.max = max;
+			this.whole = whole;
+			// Fine enough to be useful, coarse enough that a pixel of drag is a visible change.
+			double span = max - min;
+			this.step = whole ? 1.0 : span <= 5.0 ? 0.01 : span <= 50.0 ? 0.1 : 1.0;
+			this.onChange = onChange;
+			// Shows the stored value until it is dragged, so an exact default such as 301.993 is
+			// not rounded just by opening the screen.
+			this.display = format(current);
+		}
+
+		String display() {
+			return display;
+		}
+
+		private String format(double number) {
+			if (whole) {
+				return String.valueOf(Math.round(number));
+			}
+			return String.format(Locale.ROOT, step == 0.01 ? "%.2f" : step == 0.1 ? "%.1f" : "%.0f", number);
+		}
+
+		@Override
+		protected void updateMessage() {
+		}
+
+		@Override
+		protected void applyValue() {
+			double snapped = Math.round((min + value * (max - min)) / step) * step;
+			display = format(Math.max(min, Math.min(max, snapped)));
+			onChange.accept(display);
+		}
+
+		@Override
+		public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+			boolean hot = isHoveredOrFocused();
+			// Vanilla maps the mouse onto x+4 .. right-4, so the track is drawn over exactly that.
+			int left = getX() + 4;
+			int right = getRight() - 4;
+			int middle = getY() + getHeight() / 2;
+			int knob = left + (int) Math.round(value * (right - left));
+			graphics.fill(left, middle - 1, right, middle + 1, SURFACE_HOT);
+			graphics.fill(left, middle - 1, knob, middle + 1, ACCENT);
+			graphics.fill(knob - 3, middle - 6, knob + 3, middle + 6, hot ? ACCENT_HOT : TEXT);
+		}
+	}
+
+	// ------------------------------------------------------------------
+	// The list
+	// ------------------------------------------------------------------
 
 	private final class SettingsList extends ContainerObjectSelectionList<Row> {
 		SettingsList() {
@@ -136,6 +400,16 @@ public class BhopConfigScreen extends Screen {
 		public int getRowWidth() {
 			return ROW_WIDTH;
 		}
+
+		/** One dark panel behind the rows, in place of vanilla's full-width darkened strip. */
+		@Override
+		protected void extractListBackground(GuiGraphicsExtractor graphics) {
+			graphics.fill(getRowLeft() - 10, getY(), getRowLeft() + getRowWidth() + 10, getBottom(), PANEL);
+		}
+
+		@Override
+		protected void extractListSeparators(GuiGraphicsExtractor graphics) {
+		}
 	}
 
 	private abstract static class Row extends ContainerObjectSelectionList.Entry<Row> {
@@ -145,12 +419,14 @@ public class BhopConfigScreen extends Screen {
 		private final String title;
 
 		HeaderRow(String title) {
-			this.title = title;
+			this.title = title.toUpperCase(Locale.ROOT);
 		}
 
 		@Override
 		public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
-			graphics.centeredText(font, title, getContentXMiddle(), getContentYMiddle() - 2, 0xFF5CE1FF);
+			int textY = getContentBottom() - 11;
+			graphics.text(font, title, getContentX() + 4, textY, ACCENT, false);
+			graphics.fill(getContentX() + 4 + font.width(title) + 6, textY + 4, getContentRight() - 4, textY + 5, RULE);
 		}
 
 		@Override
@@ -168,6 +444,8 @@ public class BhopConfigScreen extends Screen {
 		private final String name;
 		private final String unit;
 		private final AbstractWidget widget;
+		/** Only for text settings: whether what is typed right now fails to parse. */
+		private boolean invalid;
 
 		SettingRow(Field field, Tunable tunable) {
 			String key = field.getName();
@@ -191,31 +469,58 @@ public class BhopConfigScreen extends Screen {
 			Class<?> type = field.getType();
 			Component title = Component.literal(label(key));
 			if (type == boolean.class) {
-				return CycleButton.onOffBuilder((Boolean) current).displayOnlyValue()
-						.create(0, 0, WIDGET_WIDTH, 20, title, (button, value) -> manager.set(key, value.toString()));
+				return new Switch(WIDGET_WIDTH, (Boolean) current, title, value -> manager.set(key, value.toString()));
 			}
 			if (type == BhopMode.class) {
-				return CycleButton.<BhopMode>builder(mode -> Component.literal(mode.name()), (BhopMode) current)
-						.withValues(BhopMode.values()).displayOnlyValue()
-						.create(0, 0, WIDGET_WIDTH, 20, title, (button, value) -> manager.set(key, value.name()));
+				return new FlatButton(0, 0, WIDGET_WIDTH, 20, Component.literal(((BhopMode) current).name()),
+						FlatButton.Style.NORMAL, button -> {
+					BhopMode[] modes = BhopMode.values();
+					BhopMode next = modes[(BhopMode.valueOf(button.getMessage().getString()).ordinal() + 1) % modes.length];
+					manager.set(key, next.name());
+					button.setMessage(Component.literal(next.name()));
+				});
 			}
 
-			EditBox box = new EditBox(font, 0, 0, WIDGET_WIDTH, 20, title);
+			Range range = field.getAnnotation(Range.class);
+			if (range != null) {
+				return new FlatSlider(WIDGET_WIDTH, range.min(), range.max(), type == int.class,
+						((Number) current).doubleValue(), title, value -> manager.set(key, value));
+			}
+
+			// A number with no declared range falls back to a text box. Unbordered: extractContent
+			// draws the flat field behind it.
+			EditBox box = new EditBox(font, 0, 0, WIDGET_WIDTH - 10, 14, title);
+			box.setBordered(false);
 			box.setValue(String.valueOf(current));
-			// Applied as you type; a value that does not parse just turns red and is not applied.
-			box.setResponder(text -> box.setTextColor(manager.set(key, text) == null ? COLOUR_VALID : COLOUR_INVALID));
+			// Applied as you type; a value that does not parse is flagged and not applied.
+			box.setResponder(text -> invalid = manager.set(key, text) != null);
 			return box;
 		}
 
 		@Override
 		public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
-			int textY = getContentYMiddle() - 4;
-			graphics.text(font, name, getContentX(), textY, 0xFFFFFFFF, false);
-			if (!unit.isEmpty()) {
-				graphics.text(font, unit, getContentX() + font.width(name) + 5, textY, 0xFF8A8F98, false);
+			if (hovered) {
+				graphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), ROW_HOT);
 			}
-			widget.setX(getContentRight() - WIDGET_WIDTH);
-			widget.setY(getContentY());
+			int textY = getContentYMiddle() - 4;
+			graphics.text(font, name, getContentX() + 4, textY, TEXT, false);
+			if (!unit.isEmpty()) {
+				graphics.text(font, unit, getContentX() + 4 + font.width(name) + 5, textY, DIM, false);
+			}
+
+			int widgetLeft = getContentRight() - WIDGET_WIDTH - 4;
+			if (widget instanceof EditBox) {
+				field(graphics, widgetLeft, getContentY(), WIDGET_WIDTH, widget.isFocused(), invalid);
+				widget.setX(widgetLeft + 5);
+				widget.setY(getContentY() + 6);
+			} else {
+				widget.setX(widgetLeft);
+				widget.setY(getContentY());
+			}
+			if (widget instanceof FlatSlider slider) {
+				String value = slider.display();
+				graphics.text(font, value, widgetLeft - 4 - font.width(value), textY, ACCENT, false);
+			}
 			widget.extractRenderState(graphics, mouseX, mouseY, delta);
 		}
 
