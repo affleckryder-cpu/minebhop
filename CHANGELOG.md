@@ -3,7 +3,7 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
-## Unreleased
+## 1.3.0
 
 ### Added
 - **Jump stats** (`jumpStats`, off by default). After every jump, chat shows KZ-style stats:
