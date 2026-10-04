@@ -98,16 +98,20 @@ Keybinds (rebindable in Options → Controls → MineBhop):
 |---|---|
 | `]` | Toggle Source movement |
 | `[` | Toggle the speedometer HUD |
+| `\` | Open the settings screen |
 | unbound | Cycle hop mode (manual / auto) |
 
-Commands:
+The settings screen has every setting as a toggle or a text box, grouped by section, with the
+presets along the top and a tooltip on each control saying what it does. On NeoForge it also
+opens from the Config button in the mods list. Everything in it can be done by command too:
 
 ```
 /bhop                      status
+/bhop menu                 open the settings screen
 /bhop on | off             toggle the simulation
 /bhop hud                  toggle the HUD
 /bhop mode MANUAL|AUTO     hop mode
-/bhop preset <name>        csgo, css, kz, quake, official
+/bhop preset <name>        csgo, css, kz, official
 /bhop set <key> <value>    change any setting, with tab completion
 /bhop get <key>            value plus what it does
 /bhop list                 every setting
@@ -115,9 +119,9 @@ Commands:
 /bhop save | reload        config file is config\minebhop.json
 ```
 
-The HUD sits above the hotbar and shows speed in u/s, blocks/tick, ground/air state, and
-the hop timing line: hop streak, **ground ticks on the last hop**, and speed gained or lost.
-Ground ticks is the number to watch — `0t` means you left on the same tick you landed and
+The HUD sits above the hotbar. Standing still it shows ground/air state, hop mode and tickrate;
+during a chain it shows the hop timing line: hop streak, **ground ticks on the last hop**, and
+speed gained or lost. Ground ticks is the number to watch — `0t` means you left on the same tick you landed and
 paid no friction at all.
 
 `/bhop set jumpStats true` prints KZ-style stats in chat after every jump:

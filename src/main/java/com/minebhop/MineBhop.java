@@ -45,6 +45,23 @@ public final class MineBhop {
 		return STATE;
 	}
 
+	private static boolean menuRequested;
+
+	/**
+	 * Asks for the settings screen to open on the next client tick. A command cannot open it
+	 * directly: the chat screen it was typed into closes right after, taking the new screen with it.
+	 */
+	public static void requestMenu() {
+		menuRequested = true;
+	}
+
+	/** True once per {@link #requestMenu()}. */
+	public static boolean consumeMenuRequest() {
+		boolean requested = menuRequested;
+		menuRequested = false;
+		return requested;
+	}
+
 	public static Identifier id(String path) {
 		return Identifier.fromNamespaceAndPath(MOD_ID, path);
 	}

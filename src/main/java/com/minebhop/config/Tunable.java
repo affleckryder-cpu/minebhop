@@ -22,4 +22,10 @@ public @interface Tunable {
 
 	/** The equivalent Source engine cvar, if there is one. Purely informational. */
 	String cvar() default "";
+
+	/**
+	 * Heading for the settings screen. Set it on the first field of a group; the fields after it
+	 * belong to the same group until the next one that sets it.
+	 */
+	String section() default "";
 }

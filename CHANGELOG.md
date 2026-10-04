@@ -3,6 +3,17 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## Unreleased
+
+### Added
+- **Settings screen.** Press `\` or run `/bhop menu`. Every setting is a toggle or a text box,
+  grouped by section, with the presets along the top and a tooltip on each control. On NeoForge
+  it also opens from the Config button in the mods list.
+
+### Removed
+- **The `quake` preset.** It needs Quake-style strafe jumping (forward plus strafe, slow turns),
+  so with CS-style strafing it just felt broken.
+
 ## 1.3.0
 
 ### Added

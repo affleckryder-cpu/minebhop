@@ -3,6 +3,7 @@ package com.minebhop.fabric;
 import com.minebhop.MineBhop;
 import com.minebhop.command.BhopCommand;
 import com.minebhop.config.BhopMode;
+import com.minebhop.gui.BhopConfigScreen;
 import com.minebhop.hud.SpeedHud;
 import com.minebhop.hud.SpeedometerRenderer;
 import com.minebhop.movement.SourceMoveHandler;
@@ -27,6 +28,7 @@ public class MineBhopFabric implements ClientModInitializer {
 	private static KeyMapping toggleKey;
 	private static KeyMapping hudKey;
 	private static KeyMapping modeKey;
+	private static KeyMapping menuKey;
 
 	@Override
 	public void onInitializeClient() {
@@ -39,6 +41,8 @@ public class MineBhopFabric implements ClientModInitializer {
 				"key.minebhop.hud", InputConstants.KEY_LBRACKET, category));
 		modeKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 				"key.minebhop.mode", InputConstants.UNKNOWN.getValue(), category));
+		menuKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+				"key.minebhop.menu", InputConstants.KEY_BACKSLASH, category));
 
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, buildContext) ->
 				BhopCommand.register(dispatcher, new BhopCommand.Feedback<FabricClientCommandSource>() {
@@ -76,6 +80,13 @@ public class MineBhopFabric implements ClientModInitializer {
 			MineBhop.state().reset();
 			SourceMoveHandler.resetForNewWorld();
 			return;
+		}
+
+		while (menuKey.consumeClick()) {
+			MineBhop.requestMenu();
+		}
+		if (MineBhop.consumeMenuRequest()) {
+			BhopConfigScreen.show(new BhopConfigScreen(null));
 		}
 
 		while (toggleKey.consumeClick()) {

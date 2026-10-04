@@ -14,7 +14,7 @@ public class BhopConfig {
 	// Master switches
 	// ------------------------------------------------------------------
 
-	@Tunable("Master switch for the Source movement simulation.")
+	@Tunable(value = "Master switch for the Source movement simulation.", section = "General")
 	public boolean enabled = true;
 
 	@Tunable("Allow Source movement on multiplayer servers. Off by default: to a server's anti-cheat this "
@@ -56,7 +56,7 @@ public class BhopConfig {
 	// Core Source movement cvars
 	// ------------------------------------------------------------------
 
-	@Tunable(value = "Ground running speed.", unit = "u/s", cvar = "sv_maxspeed")
+	@Tunable(value = "Ground running speed.", unit = "u/s", cvar = "sv_maxspeed", section = "Movement")
 	public double maxSpeed = 250.0;
 
 	@Tunable(value = "Ground acceleration factor.", cvar = "sv_accelerate")
@@ -97,7 +97,8 @@ public class BhopConfig {
 	// Bunny hop rules
 	// ------------------------------------------------------------------
 
-	@Tunable("MANUAL = one hop per jump key press. AUTO = hold jump to hop on every landing.")
+	@Tunable(value = "MANUAL = one hop per jump key press. AUTO = hold jump to hop on every landing.",
+			section = "Bunny hop rules")
 	public BhopMode bhopMode = BhopMode.AUTO;
 
 	@Tunable("False reproduces sv_enablebunnyhopping 0: horizontal speed is clamped on every jump, "
@@ -111,8 +112,9 @@ public class BhopConfig {
 	// Hop timing
 	// ------------------------------------------------------------------
 
-	@Tunable("Ticks you must already have been grounded before a hop fires. 0 hops on the very tick "
-			+ "you land, which skips ground friction entirely and preserves all your speed.")
+	@Tunable(value = "Ticks you must already have been grounded before a hop fires. 0 hops on the very tick "
+			+ "you land, which skips ground friction entirely and preserves all your speed.",
+			section = "Hop timing")
 	public int autoHopDelayTicks = 0;
 
 	@Tunable("Input buffer. A jump pressed this many ticks before touching the ground still hops on "
@@ -130,7 +132,7 @@ public class BhopConfig {
 	// Ladders
 	// ------------------------------------------------------------------
 
-	@Tunable("Use Source ladder movement instead of Minecraft's. You climb along the direction you "
+	@Tunable(section = "Ladders", value = "Use Source ladder movement instead of Minecraft's. You climb along the direction you "
 			+ "are looking rather than simply upward: look up to go up, look down to go down, and "
 			+ "strafe to slide sideways across the ladder. Looking level at the ladder holds you in "
 			+ "place, because all of your input is pointing into the ladder surface. Off falls back "
@@ -160,7 +162,7 @@ public class BhopConfig {
 	// Simulation fidelity
 	// ------------------------------------------------------------------
 
-	@Tunable("Tickrate the air acceleration is integrated at. Minecraft runs at 20 Hz, CS:GO at 64. "
+	@Tunable(section = "Simulation", value = "Tickrate the air acceleration is integrated at. Minecraft runs at 20 Hz, CS:GO at 64. "
 			+ "Because the air speed cap is applied per step, a 20 Hz simulation gains speed roughly "
 			+ "3x slower than CS:GO. This sub-steps acceleration to restore the real feel.")
 	public int simulationTickrate = 64;
@@ -224,19 +226,6 @@ public class BhopConfig {
 				enableBunnyHopping = true;
 				simulationTickrate = 128;
 			}
-			case "quake" -> {
-				// Uncapped air control, the CPMA-style feel Source inherited its formula from.
-				maxSpeed = 320.0;
-				acceleration = 10.0;
-				airAcceleration = 1.0;
-				friction = 6.0;
-				stopSpeed = 100.0;
-				airSpeedCap = 320.0;
-				gravity = 800.0;
-				jumpImpulse = 270.0;
-				enableBunnyHopping = true;
-				simulationTickrate = 125;
-			}
 			case "official" -> {
 				// Matchmaking CS:GO, where bunny hopping is deliberately broken.
 				applyPreset("csgo");
@@ -251,6 +240,6 @@ public class BhopConfig {
 	}
 
 	public static String[] presetNames() {
-		return new String[] { "csgo", "css", "kz", "quake", "official" };
+		return new String[] { "csgo", "css", "kz", "official" };
 	}
 }

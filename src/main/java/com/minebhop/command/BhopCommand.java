@@ -150,6 +150,11 @@ public final class BhopCommand {
 									return 1;
 								})))
 
+				.then(BhopCommand.<S>literal("menu").executes(context -> {
+					MineBhop.requestMenu();
+					return 1;
+				}))
+
 				.then(BhopCommand.<S>literal("list").executes(context -> {
 					feedback.send(context.getSource(), "--- MineBhop settings ---");
 					for (String key : ConfigManager.keys()) {

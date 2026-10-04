@@ -3,6 +3,7 @@ package com.minebhop.neoforge;
 import com.minebhop.MineBhop;
 import com.minebhop.command.BhopCommand;
 import com.minebhop.config.BhopMode;
+import com.minebhop.gui.BhopConfigScreen;
 import com.minebhop.hud.SpeedometerRenderer;
 import com.minebhop.movement.SourceMoveHandler;
 import com.minebhop.net.BhopAllowedPayload;
@@ -23,6 +24,7 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 
@@ -48,6 +50,8 @@ public class MineBhopNeoForge {
 			"key.minebhop.hud", InputConstants.KEY_LBRACKET, CATEGORY);
 	static final KeyMapping MODE_KEY = new KeyMapping(
 			"key.minebhop.mode", InputConstants.UNKNOWN.getValue(), CATEGORY);
+	static final KeyMapping MENU_KEY = new KeyMapping(
+			"key.minebhop.menu", InputConstants.KEY_BACKSLASH, CATEGORY);
 
 	public MineBhopNeoForge(IEventBus modEventBus, ModContainer container) {
 		MineBhop.init(FMLPaths.CONFIGDIR.get().resolve("minebhop.json"));
@@ -55,6 +59,10 @@ public class MineBhopNeoForge {
 		modEventBus.addListener(MineBhopNeoForge::onRegisterKeyMappings);
 		modEventBus.addListener(MineBhopNeoForge::onRegisterGuiLayers);
 		modEventBus.addListener(MineBhopNeoForge::onRegisterPayloadHandlers);
+
+		// The Config button on the mods list.
+		container.registerExtensionPoint(IConfigScreenFactory.class,
+				(IConfigScreenFactory) (modContainer, parent) -> new BhopConfigScreen(parent));
 	}
 
 	private static void onRegisterPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
@@ -66,6 +74,7 @@ public class MineBhopNeoForge {
 		event.register(TOGGLE_KEY);
 		event.register(HUD_KEY);
 		event.register(MODE_KEY);
+		event.register(MENU_KEY);
 	}
 
 	private static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
@@ -113,6 +122,13 @@ public class MineBhopNeoForge {
 				MineBhop.state().reset();
 				SourceMoveHandler.resetForNewWorld();
 				return;
+			}
+
+			while (MENU_KEY.consumeClick()) {
+				MineBhop.requestMenu();
+			}
+			if (MineBhop.consumeMenuRequest()) {
+				BhopConfigScreen.show(new BhopConfigScreen(null));
 			}
 
 			while (TOGGLE_KEY.consumeClick()) {
