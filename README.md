@@ -102,8 +102,9 @@ Keybinds (rebindable in Options → Controls → MineBhop):
 | unbound | Cycle hop mode (manual / auto) |
 
 The settings screen has every setting as a toggle or a text box, grouped by section, with the
-presets along the top and a tooltip on each control saying what it does. On NeoForge it also
-opens from the Config button in the mods list. Everything in it can be done by command too:
+presets along the top and a tooltip on each control saying what it does. It also opens
+from the mods list: the Config button on NeoForge, and the settings button in
+[Mod Menu](https://modrinth.com/mod/modmenu) on Fabric, if you have it installed. Everything in it can be done by command too:
 
 ```
 /bhop                      status

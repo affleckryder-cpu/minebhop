@@ -20,6 +20,9 @@
 		],
 		"client": [
 			"com.minebhop.fabric.MineBhopFabric"
+		],
+		"modmenu": [
+			"com.minebhop.fabric.ModMenuIntegration"
 		]
 	},
 	"mixins": [
@@ -33,5 +36,8 @@
 		"minecraft": "${minecraft_dependency}",
 		"java": ">=25",
 		"fabric-api": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
 	}
 }

@@ -7,8 +7,9 @@ and both loaders — only the compatibility metadata differs.
 
 ### Added
 - **Settings screen.** Press `\` or run `/bhop menu`. Every setting is a toggle or a text box,
-  grouped by section, with the presets along the top and a tooltip on each control. On NeoForge
-  it also opens from the Config button in the mods list.
+  grouped by section, with the presets along the top and a tooltip on each control. It also
+  opens from the mods list: the Config button on NeoForge, and Mod Menu's settings button on
+  Fabric (Mod Menu is optional).
 
 ### Removed
 - **The `quake` preset.** It needs Quake-style strafe jumping (forward plus strafe, slow turns),

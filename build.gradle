@@ -32,6 +32,11 @@ base {
 
 repositories {
 	// Loom adds the Minecraft / Fabric repositories automatically.
+	maven {
+		name = 'TerraformersMC'
+		url = 'https://maven.terraformersmc.com/releases'
+		content { includeGroup 'com.terraformersmc' }
+	}
 }
 
 loom {
@@ -53,6 +58,10 @@ dependencies {
 	minecraft "com.mojang:minecraft:${mcProps.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${mcProps.fabric_loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${mcProps.fabric_api_version}"
+
+	// Optional at runtime: only ModMenuIntegration touches it, and only Mod Menu loads that class.
+	// On the classpath rather than compile-only so the dev client has a Mods button to test with.
+	implementation("com.terraformersmc:modmenu:${mcProps.modmenu_version}") { transitive = false }
 }
 
 processResources {
