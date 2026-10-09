@@ -1,0 +1,84 @@
+plugins {
+	id 'java-library'
+	id 'net.neoforged.moddev' version '2.0.147'
+}
+
+// ---------------------------------------------------------------------------
+// MineBhop for Minecraft 1.21.1 (NeoForge).
+//
+//   ..\..\..\gradlew -p legacy\1.21.1\neoforge build
+//
+// Three sources of code, the same arrangement as the 26.x NeoForge build one level further out:
+//   - src/ here: the NeoForge entrypoints
+//   - ../src:    this Minecraft version's own files (settings screen, two mixins), minus Fabric's
+//   - the main tree, ported at build time by ../port.gradle
+// ---------------------------------------------------------------------------
+
+version = "${mod_version}+${minecraft_version}"
+group = mod_group_id
+
+base {
+	archivesName = "${mod_id}-neoforge"
+}
+
+// Built and run on the JDK that builds everything else here; the classes still target Java 21,
+// which is what Minecraft 1.21.1 runs on.
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+sourceSets.main.java {
+	srcDir '../src/main/java'
+	exclude 'com/minebhop/fabric/**'
+}
+
+sourceSets.main.resources {
+	srcDir '../src/main/resources'
+	exclude 'fabric.mod.json'
+}
+
+apply from: '../port.gradle'
+
+neoForge {
+	version = neo_version
+
+	runs {
+		client {
+			client()
+			gameDirectory = project.file('run')
+			if (project.hasProperty('clientArgs')) {
+				programArguments.addAll(project.property('clientArgs').toString().split(' ') as List)
+			}
+		}
+		server {
+			server()
+			gameDirectory = project.file('run-server')
+		}
+	}
+
+	mods {
+		"${mod_id}" {
+			sourceSet(sourceSets.main)
+		}
+	}
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+	var replaceProperties = [
+			minecraft_version_range: minecraft_version_range,
+			neo_version_range      : neo_version_range,
+			mod_id                 : mod_id,
+			mod_name               : mod_name,
+			mod_license            : mod_license,
+			mod_version            : project.version,
+	]
+	inputs.properties replaceProperties
+	expand replaceProperties
+	from "src/main/templates"
+	into layout.buildDirectory.dir("generated/sources/modMetadata")
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 21
+}

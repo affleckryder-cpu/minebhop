@@ -1,0 +1,43 @@
+{
+	"schemaVersion": 1,
+	"id": "minebhop",
+	"version": "${version}",
+	"name": "MineBhop",
+	"description": "Replaces Minecraft's player movement with a port of Source engine movement: ground friction and acceleration, air acceleration with the 30 u/s air speed cap, bunny hopping with configurable timing, the speed gain from air strafing, and look-directed ladder climbing.",
+	"authors": [
+		"ryder"
+	],
+	"contact": {
+		"homepage": "https://github.com/affleckryder-cpu/minebhop",
+		"sources": "https://github.com/affleckryder-cpu/minebhop",
+		"issues": "https://github.com/affleckryder-cpu/minebhop/issues"
+	},
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.minebhop.fabric.MineBhopFabricCommon"
+		],
+		"client": [
+			"com.minebhop.fabric.MineBhopFabric"
+		],
+		"modmenu": [
+			"com.minebhop.fabric.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		{
+			"config": "minebhop.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=${loader_version}",
+		"minecraft": "1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}

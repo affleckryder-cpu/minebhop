@@ -90,6 +90,23 @@ versions/26.3.properties
 Copy the newest one, update the Minecraft, Fabric and NeoForge versions, and run `build-all.ps1`.
 If the source still compiles against the new version, that is the whole job.
 
+### Minecraft 1.21.1
+
+Minecraft renamed too much between 1.21.1 and 26.1 for 1.21.1 to be one more properties file, so
+it has its own pair of builds under `legacy/1.21.1/`:
+
+```
+gradlew -p legacy\1.21.1 build              Fabric
+gradlew -p legacy\1.21.1\neoforge build     NeoForge
+gradlew -p legacy\1.21.1 prodClient         run the built Fabric jar the way a launcher would
+```
+
+Most of the mod is not duplicated there. The config, the movement maths, jump stats, the command,
+the HUD renderer and three of the mixins are copied from `src/` at build time with a short list
+of renames applied (`legacy/1.21.1/port.gradle`), so a fix made here reaches 1.21.1 on its next
+build. Five files have their own 1.21.1 versions: the settings screen, the two loader entrypoints
+and two mixins. When the settings screen changes here, change `legacy/1.21.1`'s copy to match.
+
 ## Using it
 
 Keybinds (rebindable in Options → Controls → MineBhop):

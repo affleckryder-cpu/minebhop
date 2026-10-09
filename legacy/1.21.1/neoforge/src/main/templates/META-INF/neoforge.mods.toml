@@ -1,0 +1,36 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="${mod_license}"
+issueTrackerURL="https://github.com/affleckryder-cpu/minebhop/issues"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="ryder"
+displayURL="https://github.com/affleckryder-cpu/minebhop"
+# Optional on both sides: a server with it lets clients with it bhop, and anyone can still join.
+displayTest="IGNORE_ALL_VERSION"
+description='''
+Replaces Minecraft's player movement with a port of Source engine movement: ground friction and
+acceleration, air acceleration with the 30 u/s air speed cap, bunny hopping with configurable
+timing, the speed gain from air strafing, and look-directed ladder climbing.
+'''
+
+# Mixins are client-only (see the mixin config); a server only sends the "allowed" payload.
+[[mixins]]
+config="${mod_id}.mixins.json"
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="${neo_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"

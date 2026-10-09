@@ -1,0 +1,90 @@
+plugins {
+	// The remapping flavour of Loom: 1.21.1 ships obfuscated, unlike 26.x.
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+// ---------------------------------------------------------------------------
+// MineBhop for Minecraft 1.21.1 (Fabric).
+//
+//   ..\..\gradlew -p legacy\1.21.1 build
+//
+// Minecraft renamed a great deal between 1.21.1 and 26.1, so this version cannot be one more
+// versions/<mc>.properties file. But most of the mod does not care: the config, the movement
+// maths, the jump stats, the command and the payload contain no renamed API at all, and the HUD
+// renderer, the move handler and three of the mixins differ only by names. Those are pulled from
+// the main source tree at build time (see portSources) so there is still one copy of each.
+// Only what genuinely differs lives in src/ here: the settings screen, the loader entrypoints and
+// two mixins.
+// ---------------------------------------------------------------------------
+
+version = "${project.mod_version}+${project.minecraft_version}"
+group = project.maven_group
+
+base {
+	archivesName = 'minebhop-fabric'
+}
+
+repositories {
+	maven {
+		name = 'TerraformersMC'
+		url = 'https://maven.terraformersmc.com/releases'
+		content { includeGroup 'com.terraformersmc' }
+	}
+}
+
+// Pulls the shared sources in from the main tree; see port.gradle.
+apply from: 'port.gradle'
+
+loom {
+	runs {
+		client { runDir = 'run' }
+		server { runDir = 'run-server' }
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()          // the same names 26.x uses natively
+	modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Optional at runtime: only ModMenuIntegration touches it, and only Mod Menu loads that class.
+	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}") { transitive = false }
+
+	// What prodClient loads next to the built jar.
+	productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+// Runs the remapped jar the way a launcher would: obfuscated game, intermediary names, no dev
+// classpath. runClient cannot catch a jar that was remapped wrongly, because it never uses the jar.
+//   ..\..\gradlew -p legacy.21.1 prodClient
+tasks.register('prodClient', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+	runDir = file('run-prod')
+	if (System.getenv('JAVA_TOOL_OPTIONS')?.contains('mixin.debug.export')) {
+		jvmArgs.add('-Dmixin.debug.export=true')
+	}
+}
+
+processResources {
+	def expansions = [version: project.version, loader_version: project.fabric_loader_version]
+	inputs.properties expansions
+	filesMatching('fabric.mod.json') {
+		expand expansions
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21          // Minecraft 1.21.1 runs on Java 21
+	it.options.encoding = 'UTF-8'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+	from('../../LICENSE') {
+		rename { "${it}_minebhop" }
+	}
+}

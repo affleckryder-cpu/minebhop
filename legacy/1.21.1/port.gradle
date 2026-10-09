@@ -1,0 +1,66 @@
+// ---------------------------------------------------------------------------
+// Shared by the Fabric build (this folder) and the NeoForge build (neoforge/).
+//
+// Most of MineBhop contains no API that changed between 1.21.1 and 26.x, or differs only by
+// names. Those files are copied from the main source tree at build time, with the renames below
+// applied, and added to the main source set -- so there is one copy of each, and a fix made for
+// 26.x reaches this version on the next build.
+// ---------------------------------------------------------------------------
+def mainTree = new File(buildscript.sourceFile.parentFile, '../../src/main')
+
+// Files taken from the main tree as they are, or with only the renames below applied.
+def portedFiles = [
+		'com/minebhop/MineBhop.java',
+		'com/minebhop/config/**',
+		'com/minebhop/command/**',
+		'com/minebhop/net/**',
+		'com/minebhop/hud/SpeedometerRenderer.java',
+		'com/minebhop/movement/**',
+		'com/minebhop/mixin/PlayerTravelMixin.java',
+		'com/minebhop/mixin/LivingEntityJumpMixin.java',
+		'com/minebhop/mixin/PlayerFallDamageMixin.java',
+]
+
+// 26.x name -> 1.21.1 name. Plain text replacement, applied to every ported file, so each entry
+// has to be specific enough not to hit anything else; keep them as long as the line allows.
+def renames = [
+		// MineBhop.id
+		'net.minecraft.resources.Identifier'                : 'net.minecraft.resources.ResourceLocation',
+		'public static Identifier id('                      : 'public static ResourceLocation id(',
+		'return Identifier.fromNamespaceAndPath('           : 'return ResourceLocation.fromNamespaceAndPath(',
+		// Key state: a record with accessors in 26.x, public fields on the client Input before.
+		'import net.minecraft.world.entity.player.Input;'   : 'import net.minecraft.client.player.Input;',
+		'player.input.keyPresses'                           : 'player.input',
+		'keys.forward()'                                    : 'keys.up',
+		'keys.backward()'                                   : 'keys.down',
+		'keys.right()'                                      : 'keys.right',
+		'keys.left()'                                       : 'keys.left',
+		'keys.jump()'                                       : 'keys.jumping',
+		'keys.shift()'                                      : 'keys.shiftKeyDown',
+		'state.getValue(LadderBlock.FACING).getUnitVec3()'  : 'Vec3.atLowerCornerOf(state.getValue(LadderBlock.FACING).getNormal())',
+		// HUD drawing
+		'GuiGraphicsExtractor'                              : 'GuiGraphics',
+		'graphics.text('                                    : 'graphics.drawString(',
+		// Player#causeFallDamage took a float distance.
+		'minebhop$noFallDamage(double fallDistance'         : 'minebhop$noFallDamage(float fallDistance',
+]
+
+def portSources = tasks.register('portSources', Sync) {
+	from new File(mainTree, 'java')
+	include portedFiles
+	into layout.buildDirectory.dir('ported-src')
+	inputs.property 'renames', renames
+	filter { String line ->
+		renames.each { from, to -> line = line.replace(from, to) }
+		line
+	}
+}
+sourceSets.main.java.srcDir(portSources)
+
+// Language file and icon are shared too; the mod metadata and mixin config are this version's own.
+def portResources = tasks.register('portResources', Sync) {
+	from new File(mainTree, 'resources')
+	include 'assets/**'
+	into layout.buildDirectory.dir('ported-resources')
+}
+sourceSets.main.resources.srcDir(portResources)
