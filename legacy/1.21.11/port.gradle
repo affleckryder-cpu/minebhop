@@ -1,0 +1,60 @@
+// ---------------------------------------------------------------------------
+// Shared by the Fabric build (this folder) and the NeoForge build (neoforge/).
+//
+// 1.21.11 is the last Minecraft before the 26.x renames, and the code differs from 26.x by names
+// only. So every source file is copied from the main tree at build time with the renames below
+// applied. If something ever cannot be expressed as a rename, put this version's own copy at the
+// same path under src/main/java and it replaces the main tree's file.
+// ---------------------------------------------------------------------------
+def mainTree = new File(buildscript.sourceFile.parentFile, '../../src/main')
+def neoTree = new File(buildscript.sourceFile.parentFile, '../../neoforge/src/main')
+def ownTree = new File(buildscript.sourceFile.parentFile, 'src/main/java')
+def neoforge = project.findProperty('portLoader') == 'neoforge'
+
+// 26.x name -> 1.21.11 name. Plain text replacement, applied to every ported file, so each entry
+// has to be specific enough not to hit anything else.
+def renames = [
+		'GuiGraphicsExtractor'                              : 'GuiGraphics',
+		'graphics.text('                                    : 'graphics.drawString(',
+		'graphics.outline('                                 : 'graphics.renderOutline(',
+		// Rendering methods, before they became "extract render state".
+		'extractRenderState('                               : 'render(',
+		'extractWidgetRenderState('                         : 'renderWidget(',
+		'extractContents('                                  : 'renderContents(',
+		'extractContent('                                   : 'renderContent(',
+		'extractListBackground('                            : 'renderListBackground(',
+		'extractListSeparators('                            : 'renderListSeparators(',
+		// Chat feedback: LocalPlayer#sendSystemMessage is 26.x. The longer pattern has to come first.
+		'client.player.sendSystemMessage('                  : 'client.gui.getChat().addMessage(',
+		'player.sendSystemMessage('                         : 'net.minecraft.client.Minecraft.getInstance().gui.getChat().addMessage(',
+		// Fabric API
+		'keymapping.v1.KeyMappingHelper'                    : 'keybinding.v1.KeyBindingHelper',
+		'KeyMappingHelper.registerKeyMapping('              : 'KeyBindingHelper.registerKeyBinding(',
+		'PayloadTypeRegistry.clientboundPlay()'             : 'PayloadTypeRegistry.playS2C()',
+]
+
+def portSources = tasks.register('portSources', Sync) {
+	from new File(mainTree, 'java')
+	if (neoforge) {
+		from new File(neoTree, 'java')
+		exclude 'com/minebhop/fabric/**', 'com/minebhop/hud/SpeedHud.java'
+	}
+	// Anything this version has its own copy of.
+	exclude { element -> !element.directory && new File(ownTree, element.relativePath.pathString).exists() }
+	into layout.buildDirectory.dir('ported-src')
+	inputs.property 'renames', renames
+	inputs.files(fileTree(ownTree)).withPropertyName('ownSources')
+	filter { String line ->
+		renames.each { from, to -> line = line.replace(from, to) }
+		line
+	}
+}
+sourceSets.main.java.srcDir(portSources)
+
+// Language file and icon are shared too; the mod metadata and mixin config are this version's own.
+def portResources = tasks.register('portResources', Sync) {
+	from new File(mainTree, 'resources')
+	include 'assets/**'
+	into layout.buildDirectory.dir('ported-resources')
+}
+sourceSets.main.resources.srcDir(portResources)

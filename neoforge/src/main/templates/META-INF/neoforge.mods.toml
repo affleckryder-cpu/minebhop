@@ -9,6 +9,7 @@ version="${mod_version}"
 displayName="${mod_name}"
 authors="ryder"
 displayURL="https://github.com/affleckryder-cpu/minebhop"
+logoFile="assets/minebhop/icon.png"
 # Optional on both sides: a server with it lets clients with it bhop, and anyone can still join.
 displayTest="IGNORE_ALL_VERSION"
 description='''

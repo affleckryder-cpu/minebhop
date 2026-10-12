@@ -57,7 +57,7 @@ dependencies {
 
 // Runs the remapped jar the way a launcher would: obfuscated game, intermediary names, no dev
 // classpath. runClient cannot catch a jar that was remapped wrongly, because it never uses the jar.
-//   ..\..\gradlew -p legacy.21.1 prodClient
+//   ..\..\gradlew -p legacy\1.21.1 prodClient
 tasks.register('prodClient', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
 	runDir = file('run-prod')
 	if (System.getenv('JAVA_TOOL_OPTIONS')?.contains('mixin.debug.export')) {

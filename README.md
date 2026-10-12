@@ -5,25 +5,23 @@ the CS:GO model. Ground friction and acceleration, air acceleration with the 30 
 bunny hopping with configurable timing, the speed gain that comes out of air strafing, and
 look-directed ladder climbing.
 
-Built for **Fabric and NeoForge**, on **Minecraft 26.2 and 26.3**, from one shared codebase.
+Built for **Fabric and NeoForge**, on **Minecraft 1.21.1, 1.21.11 and 26.1 to 26.3**, from one
+shared codebase.
 
 ## Downloads
 
-Pick the jar matching your loader *and* Minecraft version — they are not interchangeable.
+Pick the jar matching your loader *and* Minecraft version — they are not interchangeable. The
+name ends in the Minecraft version it is for: `minebhop-<loader>-<mod version>+<minecraft>.jar`.
 
-| | Minecraft 26.2 | Minecraft 26.3 |
+| Minecraft | Jar suffix | Java |
 |---|---|---|
-| **Fabric** | `minebhop-fabric-1.1.0+26.2.jar` | `minebhop-fabric-1.1.0+26.3.jar` |
-| **NeoForge** | `minebhop-neoforge-1.1.0+26.2.jar` | `minebhop-neoforge-1.1.0+26.3.jar` |
+| 1.21.1 | `+1.21.1` | 21 |
+| 1.21.11 | `+1.21.11` | 21 |
+| 26.1, 26.1.1, 26.1.2 | `+26.1.2` | 25 |
+| 26.2 | `+26.2` | 25 |
+| 26.3 | `+26.3` | 25 |
 
-All four land in `dist\` after a build. Use the one **without** `-sources` in its name.
-
-| Requirement | 26.2 | 26.3 |
-|---|---|---|
-| Java | 25 | 25 |
-| Fabric Loader | 0.19.3+ | 0.19.5+ |
-| Fabric API | 0.158.0+26.2 | 0.160.6+26.3 |
-| NeoForge | 26.2.0.87+ | 26.3.0.3-beta+ *(beta only so far)* |
+They land in `dist\` after a build. Use the one **without** `-sources` in its name.
 
 Fabric needs the Fabric API jar alongside it. NeoForge needs nothing extra.
 
@@ -106,6 +104,9 @@ the HUD renderer and three of the mixins are copied from `src/` at build time wi
 of renames applied (`legacy/1.21.1/port.gradle`), so a fix made here reaches 1.21.1 on its next
 build. Five files have their own 1.21.1 versions: the settings screen, the two loader entrypoints
 and two mixins. When the settings screen changes here, change `legacy/1.21.1`'s copy to match.
+
+Minecraft 1.21.11 builds the same way from `legacy/1.21.11/` (the same three commands with that
+path). It is close enough to 26.x that it has no source files of its own: renames alone cover it.
 
 ## Using it
 

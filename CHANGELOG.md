@@ -3,6 +3,15 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## 1.4.1
+
+### Added
+- **Minecraft 1.21.11 support**, on Fabric and NeoForge, with every feature of the other builds.
+  Requires Java 21.
+- **Mod icon.** MineBhop now has its logo in the mods list on both loaders, and in Mod Menu.
+
+No gameplay changes. Covers Minecraft 1.21.1, 1.21.11 and 26.1 to 26.3.
+
 ## 1.4.0 for Minecraft 1.21.1
 
 First build for Minecraft 1.21.1, on Fabric and NeoForge, with everything in 1.4.0 below.
