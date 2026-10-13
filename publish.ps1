@@ -15,6 +15,7 @@
 param(
     [string]$Version,                    # default: mod_version in gradle.properties
     [string]$Only = '*',                 # wildcard on the jar name
+    [string]$ChangelogSection,           # heading in CHANGELOG.md, default: the version
     [ValidateSet('release', 'beta', 'alpha')][string]$ReleaseType = 'release',
     [switch]$Publish
 )
@@ -34,18 +35,19 @@ if (-not $token) { $token = [Environment]::GetEnvironmentVariable('CURSEFORGE_TO
 if (-not $token) { throw 'CURSEFORGE_TOKEN is not set.' }
 
 # The changelog is this version's section of CHANGELOG.md, without its heading.
+if (-not $ChangelogSection) { $ChangelogSection = $Version }
 $changelog = ''
 $inSection = $false
 foreach ($line in Get-Content (Join-Path $root 'CHANGELOG.md') -Encoding UTF8) {
     if ($line -match '^## ') {
         if ($inSection) { break }
-        $inSection = ($line.Trim() -eq "## $Version")
+        $inSection = ($line.Trim() -eq "## $ChangelogSection")
         continue
     }
     if ($inSection) { $changelog += "$line`n" }
 }
 $changelog = $changelog.Trim()
-if (-not $changelog) { throw "CHANGELOG.md has no '## $Version' section." }
+if (-not $changelog) { throw "CHANGELOG.md has no '## $ChangelogSection' section." }
 
 # A jar built for one Minecraft version can declare that it runs on several.
 $minecraftFor = @{ '26.1.2' = @('26.1', '26.1.1', '26.1.2') }
@@ -68,13 +70,13 @@ $jars = @(Get-ChildItem (Join-Path $root 'dist') -Filter "minebhop-*-$Version+*.
 if (-not $jars) { throw "No jars for $Version matching '$Only' in dist\." }
 
 $plan = foreach ($jar in $jars) {
-    if ($jar.Name -notmatch '^minebhop-(fabric|neoforge)-(.+)\+(.+)\.jar$') { throw "Unexpected jar name: $($jar.Name)" }
+    if ($jar.Name -notmatch '^minebhop-(fabric|neoforge|forge)-(.+)\+(.+)\.jar$') { throw "Unexpected jar name: $($jar.Name)" }
     $loader = $Matches[1]
     $mc = $Matches[3]
     # @(...) around the whole thing: an if-expression unwraps a one-element array to a bare string.
     $mcList = @(if ($minecraftFor.ContainsKey($mc)) { $minecraftFor[$mc] } else { $mc })
-    $java = if ($mc -like '1.21*') { 'Java 21' } else { 'Java 25' }
-    $loaderName = if ($loader -eq 'fabric') { 'Fabric' } else { 'NeoForge' }
+    $java = if ($mc -like '1.20*') { 'Java 17' } elseif ($mc -like '1.21*') { 'Java 21' } else { 'Java 25' }
+    $loaderName = @{ fabric = 'Fabric'; neoforge = 'NeoForge'; forge = 'Forge' }[$loader]
 
     $ids = @($mcList | ForEach-Object { Get-VersionId $_ '^minecraft-' })
     $ids += Get-VersionId $loaderName '^modloader$'

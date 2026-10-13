@@ -3,6 +3,11 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## 1.4.1 for Minecraft 1.20.1
+
+First build for Minecraft 1.20.1, on Fabric and Forge, with everything in 1.4.1 below.
+Requires Java 17.
+
 ## 1.4.1
 
 ### Added

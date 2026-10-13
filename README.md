@@ -5,8 +5,8 @@ the CS:GO model. Ground friction and acceleration, air acceleration with the 30 
 bunny hopping with configurable timing, the speed gain that comes out of air strafing, and
 look-directed ladder climbing.
 
-Built for **Fabric and NeoForge**, on **Minecraft 1.21.1, 1.21.11 and 26.1 to 26.3**, from one
-shared codebase.
+Built for **Fabric and NeoForge**, on **Minecraft 1.20.1, 1.21.1, 1.21.11 and 26.1 to 26.3**, from
+one shared codebase. On 1.20.1 the second loader is **Forge** rather than NeoForge.
 
 ## Downloads
 
@@ -15,6 +15,7 @@ name ends in the Minecraft version it is for: `minebhop-<loader>-<mod version>+<
 
 | Minecraft | Jar suffix | Java |
 |---|---|---|
+| 1.20.1 | `+1.20.1` | 17 |
 | 1.21.1 | `+1.21.1` | 21 |
 | 1.21.11 | `+1.21.11` | 21 |
 | 26.1, 26.1.1, 26.1.2 | `+26.1.2` | 25 |
@@ -107,6 +108,18 @@ and two mixins. When the settings screen changes here, change `legacy/1.21.1`'s 
 
 Minecraft 1.21.11 builds the same way from `legacy/1.21.11/` (the same three commands with that
 path). It is close enough to 26.x that it has no source files of its own: renames alone cover it.
+
+Minecraft 1.20.1 is in `legacy/1.20.1/`, arranged like 1.21.1, with a Forge build in `forge/` where
+the others have `neoforge/`:
+
+```
+gradlew -p legacy\1.20.1 build              Fabric
+gradlew -p legacy\1.20.1\forge build        Forge
+```
+
+It has its own settings screen, loader entrypoints and two mixins. 1.20.1 predates typed network
+payloads, so the "allowed" packet is sent as a bare channel name there; it is the same packet on
+the wire.
 
 ## Using it
 

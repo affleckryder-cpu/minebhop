@@ -79,6 +79,7 @@ CAPTIONS = [(start * BEAT, stop * BEAT, line1, line2) for start, stop, line1, li
 WORD_GAP = BEAT / 4          # words arrive on sixteenth notes
 
 WHITE, YELLOW, CYAN, BLACK = (255, 255, 255), (255, 230, 0), (92, 225, 255), (0, 0, 0)
+END_LINE = "FABRIC + NEOFORGE"      # last line of the end card
 IMPACT = r"C:\Windows\Fonts\impact.ttf"
 BAHN = r"C:\Windows\Fonts\bahnschrift.ttf"
 
@@ -187,7 +188,7 @@ def end_png():
     stroked(d, (x, 1050), "MINE", f, WHITE, 14)
     stroked(d, (x + d.textlength("MINE", font=f), 1050), "BHOP", f, CYAN, 14)
     centred(1300, "ON CURSEFORGE", impact(96), WHITE)
-    centred(1440, "FABRIC + NEOFORGE", bahn(52), (190, 198, 212), 0)
+    centred(1440, END_LINE, bahn(52), (190, 198, 212), 0)
     path = os.path.join(WORK, "end.png")
     card.convert("RGB").save(path)
     return path
