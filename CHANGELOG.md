@@ -5,8 +5,9 @@ and both loaders — only the compatibility metadata differs.
 
 ## 1.4.1 for Minecraft 1.20.1
 
-First build for Minecraft 1.20.1, on Fabric and Forge, with everything in 1.4.1 below.
-Requires Java 17.
+First build for Minecraft 1.20.1, on Fabric and Forge, with every feature of the other builds:
+Source movement, the HUD and XP bar speedometer, jump stats, the settings screen with presets, and
+server support. Requires Java 17.
 
 ## 1.4.1
 

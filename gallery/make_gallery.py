@@ -153,7 +153,7 @@ def cover():
     d.text((120 + d.textlength("Mine", font=font(170, "Bold")), 500), "Bhop", font=font(170, "Bold"), fill=CYAN)
     d.text((126, 700), "Counter-Strike movement, in Minecraft.", font=font(54, "SemiBold"), fill=(222, 228, 238))
     d.text((126, 778), "Bunny hop, air strafe and gain speed like in CS:GO.", font=font(38), fill=DIM)
-    chips(card, ["Fabric", "NeoForge", "1.21.1", "1.21.11", "26.1 \u2013 26.3", "Client + Server"], 126, 880)
+    chips(card, ["Fabric", "Forge", "NeoForge", "1.20.1 \u2013 26.3", "Client + Server"], 126, 880)
     save(card, "01-cover.png")
 
 
