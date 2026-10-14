@@ -1,0 +1,102 @@
+plugins {
+	id 'java-library'
+	// The same plugin the NeoForge builds use, in the mode that targets Forge up to 1.19.2.
+	id 'net.neoforged.moddev.legacyforge' version '2.0.147'
+}
+
+// ---------------------------------------------------------------------------
+// MineBhop for Minecraft 1.19.2 (Forge).
+//
+//   ..\..\..\gradlew -p legacy\1.19.2\forge build
+//
+// Three sources of code:
+//   - src/ here: the Forge entrypoints
+//   - ../src:    this Minecraft version's own files (settings screen, two mixins), minus Fabric's
+//   - the main tree, ported at build time by ../port.gradle
+// ---------------------------------------------------------------------------
+
+version = "${mod_version}+${minecraft_version}"
+group = mod_group_id
+
+base {
+	archivesName = "${mod_id}-forge"
+}
+
+sourceSets.main.java {
+	srcDir '../src/main/java'
+	exclude 'com/minebhop/fabric/**'
+}
+
+// Not the Fabric build's resources: Forge needs a mixin config that names a refmap, and has its
+// own metadata. The language file and icon arrive through port.gradle.
+apply from: '../port.gradle'
+
+legacyForge {
+	version = "${minecraft_version}-${forge_version}"
+
+	runs {
+		client {
+			client()
+			gameDirectory = project.file('run')
+			if (project.hasProperty('clientArgs')) {
+				programArguments.addAll(project.property('clientArgs').toString().split(' ') as List)
+			}
+		}
+		server {
+			server()
+			gameDirectory = project.file('run-server')
+		}
+	}
+
+	mods {
+		"${mod_id}" {
+			sourceSet(sourceSets.main)
+		}
+	}
+}
+
+// Forge 1.19.2 runs on obfuscated names, so mixin targets go through a refmap written at compile time.
+mixin {
+	add sourceSets.main, "${mod_id}.refmap.json"
+	config "${mod_id}.mixins.json"
+}
+
+dependencies {
+	annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+jar {
+	manifest.attributes(['MixinConfigs': "${mod_id}.mixins.json"])
+	from('../../../LICENSE') {
+		rename { "${it}_minebhop" }
+	}
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+	var replaceProperties = [
+			minecraft_version_range: minecraft_version_range,
+			forge_version_range    : forge_version_range,
+			mod_id                 : mod_id,
+			mod_name               : mod_name,
+			mod_license            : mod_license,
+			mod_version            : project.version,
+	]
+	inputs.properties replaceProperties
+	expand replaceProperties
+	from "src/main/templates"
+	into layout.buildDirectory.dir("generated/sources/modMetadata")
+}
+sourceSets.main.resources.srcDir generateModMetadata
+legacyForge.ideSyncTask generateModMetadata
+
+// Forge 1.19.2 takes the mods-list logo only from the jar's root, by bare file name.
+processResources {
+	from('../../../src/main/resources/assets/minebhop/icon.png') {
+		rename { 'minebhop.png' }
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 17          // Minecraft 1.19.2 runs on Java 17
+}

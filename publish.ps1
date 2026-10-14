@@ -94,7 +94,7 @@ $plan = foreach ($jar in $jars) {
     $mc = $Matches[3]
     # @(...) around the whole thing: an if-expression unwraps a one-element array to a bare string.
     $mcList = @(if ($minecraftFor.ContainsKey($mc)) { $minecraftFor[$mc] } else { $mc })
-    $java = if ($mc -like '1.20*') { 'Java 17' } elseif ($mc -like '1.21*') { 'Java 21' } else { 'Java 25' }
+    $java = if ($mc -like '1.19*' -or $mc -like '1.20*') { 'Java 17' } elseif ($mc -like '1.21*') { 'Java 21' } else { 'Java 25' }
     $loaderName = @{ fabric = 'Fabric'; neoforge = 'NeoForge'; forge = 'Forge' }[$loader]
 
     $ids = @($mcList | ForEach-Object { Get-VersionId $_ '^minecraft-' })

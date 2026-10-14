@@ -3,6 +3,12 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## 1.4.2 for Minecraft 1.19.2
+
+First release for Minecraft 1.19.2, on Fabric and Forge, with everything in 1.4.2 and earlier: Source
+movement, the HUD and XP bar speedometer, jump stats, the settings screen with presets, and server
+support including settings sync. Requires Java 17.
+
 ## 1.4.2
 
 ### Added
