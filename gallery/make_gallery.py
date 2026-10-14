@@ -212,7 +212,7 @@ def settings():
 def servers():
     card = new_card()
     text_block(card, "Multiplayer", ["Play it on", "servers."], [
-        "Put the same jar on a Fabric or NeoForge server",
+        "Same jar on a Fabric, Forge or NeoForge server",
         "Players with the mod can bhop there right away",
         "Players without it still join as normal",
         "Off by default elsewhere, so anti-cheat stays happy",
@@ -240,9 +240,63 @@ def servers():
     save(card, "05-servers.png")
 
 
+def sync():
+    card = new_card()
+    text_block(card, "Server sync", ["One server,", "one ruleset."], [
+        "Server owners set the physics for everyone",
+        "Players' own settings come back when they leave",
+        "Locked while connected, shown in the settings",
+        "The mod's limits still apply. Nothing broken",
+    ])
+    d = ImageDraw.Draw(card)
+    mono = ImageFont.truetype(r"C:\Windows\Fonts\consola.ttf", 32)
+    mono_bold = ImageFont.truetype(r"C:\Windows\Fonts\consolab.ttf", 32)
+    key, value, punct = CYAN, (255, 214, 102), (150, 158, 172)
+
+    # The config file a server owner edits.
+    box = (1000, 150, 1840, 640)
+    d.rounded_rectangle(box, 22, fill=(18, 21, 28), outline=(52, 58, 72), width=2)
+    d.rounded_rectangle((box[0], box[1], box[2], box[1] + 56), 22, fill=SURFACE)
+    d.rectangle((box[0], box[1] + 34, box[2], box[1] + 56), fill=SURFACE)
+    d.text((box[0] + 28, box[1] + 12), "config/minebhop-server.json", font=font(28, "SemiBold"), fill=DIM)
+    lines = [
+        [("{", punct)],
+        [("  \"syncSettings\"", key), (": ", punct), ("true", (92, 255, 138)), (",", punct)],
+        [("  \"settings\"", key), (": {", punct)],
+        [("    \"maxSpeed\"", key), (": ", punct), ("\"250\"", value), (",", punct)],
+        [("    \"airAcceleration\"", key), (": ", punct), ("\"100\"", value), (",", punct)],
+        [("    \"gravity\"", key), (": ", punct), ("\"800\"", value), (",", punct)],
+        [("    ...", punct)],
+        [("  }", punct)],
+        [("}", punct)],
+    ]
+    y = box[1] + 84
+    for parts in lines:
+        x = box[0] + 34
+        for text, colour in parts:
+            f = mono_bold if colour == (92, 255, 138) else mono
+            d.text((x, y), text, font=f, fill=colour)
+            x += d.textlength(text, font=f)
+        y += 46
+
+    # What a player sees in their settings while connected.
+    row = (1000, 700, 1840, 790)
+    d.rounded_rectangle(row, 18, fill=SURFACE)
+    d.text((row[0] + 30, row[1] + 26), "Air Acceleration", font=font(34), fill=DIM)
+    track = (1440, 745)
+    d.rounded_rectangle((track[0], track[1] - 3, track[0] + 250, track[1] + 3), 3, fill=(52, 58, 72))
+    d.rounded_rectangle((track[0], track[1] - 3, track[0] + 125, track[1] + 3), 3, fill=(70, 120, 135))
+    d.rounded_rectangle((track[0] + 119, track[1] - 16, track[0] + 131, track[1] + 16), 3, fill=(120, 128, 140))
+    d.text((1345, row[1] + 26), "100", font=font(34, "SemiBold"), fill=(120, 128, 140))
+    d.text((row[0] + 30, row[1] + 108), "PHYSICS SET BY THIS SERVER", font=font(28, "SemiBold"), fill=CYAN)
+    d.text((row[0] + 30, row[1] + 150), "Back to your own settings the moment you leave.", font=font(30), fill=DIM)
+    save(card, "06-sync.png")
+
+
 if __name__ == "__main__":
     cover()
     movement()
     hud()
     settings()
     servers()
+    sync()
