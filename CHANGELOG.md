@@ -5,26 +5,25 @@ and both loaders — only the compatibility metadata differs.
 
 ## 1.4.2 for Minecraft 1.19.2
 
-First release for Minecraft 1.19.2, on Fabric and Forge, with everything in 1.4.2 and earlier: Source
-movement, the HUD and XP bar speedometer, jump stats, the settings screen with presets, and server
-support including settings sync. Requires Java 17.
+First release for Minecraft 1.19.2, on Fabric and Forge. Requires Java 17.
+
+### Included
+- **Source movement:** bunny hopping, air strafing and Source-style ladders
+- **HUD and XP bar speedometer**, both optional
+- **Jump stats** after every jump
+- **Settings screen** (`\`) with sliders, switches and presets
+- **Server support**, including server settings sync
 
 ## 1.4.2
 
 ### Added
-- **Server settings sync.** A dedicated server can now set the movement physics for everyone on it.
-  The server writes `config/minebhop-server.json` on first start; set `syncSettings` to `true` and
-  every player with the mod uses the settings in that file while connected. Their own settings are
-  never overwritten and come back the moment they leave. The physics controls show as locked while
-  a server is in charge; HUD and other General settings stay the player's. Values outside the
-  mod's limits are ignored, and the file is read on every join, so changes need no restart.
+- **Server settings sync:** server owners can set the bhop physics for everyone on the server.
+  Turn on `syncSettings` in `config/minebhop-server.json`.
+- Your own settings are never overwritten, and they come back when you leave the server.
 
 ### Fixed
-- **NeoForge 26.x showed a warning screen at startup.** The mod icon added in 1.4.1 used a
-  metadata key NeoForge 26.x has deprecated, so every launch stopped on a "warnings during mod
-  loading" screen. It now uses the current key.
-- **The presets dropdown was slightly see-through**, so settings behind it showed faintly through
-  the list.
+- NeoForge 26.x no longer shows a warning screen at startup
+- The presets dropdown is no longer see-through
 
 ## 1.4.1 for Minecraft 1.20.1
 
