@@ -3,11 +3,34 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## 1.4.2
+
+### Added
+- **Server settings sync.** A dedicated server can now set the movement physics for everyone on it.
+  The server writes `config/minebhop-server.json` on first start; set `syncSettings` to `true` and
+  every player with the mod uses the settings in that file while connected. Their own settings are
+  never overwritten and come back the moment they leave. The physics controls show as locked while
+  a server is in charge; HUD and other General settings stay the player's. Values outside the
+  mod's limits are ignored, and the file is read on every join, so changes need no restart.
+
+### Fixed
+- **NeoForge 26.x showed a warning screen at startup.** The mod icon added in 1.4.1 used a
+  metadata key NeoForge 26.x has deprecated, so every launch stopped on a "warnings during mod
+  loading" screen. It now uses the current key.
+- **The presets dropdown was slightly see-through**, so settings behind it showed faintly through
+  the list.
+
 ## 1.4.1 for Minecraft 1.20.1
 
-First build for Minecraft 1.20.1, on Fabric and Forge, with every feature of the other builds:
-Source movement, the HUD and XP bar speedometer, jump stats, the settings screen with presets, and
-server support. Requires Java 17.
+First release for Minecraft 1.20.1, on Fabric and Forge. Requires Java 17.
+
+### Included
+- **Source movement.** Bunny hopping, air strafing and Source-style ladders, the same physics as
+  every other build.
+- **HUD and XP bar speedometer**, both optional.
+- **Jump stats.** Distance, takeoff speed, top speed, strafes and sync after every jump.
+- **Settings screen** (`\`) with sliders, switches and presets, including your own.
+- **Server support.** Put the same jar on a server and players with the mod can bhop there.
 
 ## 1.4.1
 

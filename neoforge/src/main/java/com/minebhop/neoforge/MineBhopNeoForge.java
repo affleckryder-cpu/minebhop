@@ -7,6 +7,7 @@ import com.minebhop.gui.BhopConfigScreen;
 import com.minebhop.hud.SpeedometerRenderer;
 import com.minebhop.movement.SourceMoveHandler;
 import com.minebhop.net.BhopAllowedPayload;
+import com.minebhop.net.BhopSettingsPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -67,6 +68,8 @@ public class MineBhopNeoForge {
 
 	private static void onRegisterPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
 		event.register(BhopAllowedPayload.TYPE, (payload, context) -> SourceMoveHandler.markServerAllowed());
+		event.register(BhopSettingsPayload.TYPE,
+				(payload, context) -> SourceMoveHandler.receiveServerSettings(payload.json()));
 	}
 
 	private static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {

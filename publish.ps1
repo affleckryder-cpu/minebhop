@@ -17,7 +17,8 @@ param(
     [string]$Only = '*',                 # wildcard on the jar name
     [string]$ChangelogSection,           # heading in CHANGELOG.md, default: the version
     [ValidateSet('release', 'beta', 'alpha')][string]$ReleaseType = 'release',
-    [switch]$Publish
+    [switch]$Publish,
+    [switch]$Again                       # upload jars that were uploaded before
 )
 
 $ErrorActionPreference = 'Stop'
@@ -46,7 +47,15 @@ foreach ($line in Get-Content (Join-Path $root 'CHANGELOG.md') -Encoding UTF8) {
     }
     if ($inSection) { $changelog += "$line`n" }
 }
-$changelog = $changelog.Trim()
+# CHANGELOG.md is hard-wrapped at 100 columns. Markdown renders that as one paragraph, but the raw
+# text is what shows in CurseForge's editor and in some launchers, so each paragraph and each
+# bullet is joined back onto one line.
+$unwrapped = @()
+foreach ($line in ($changelog.Trim() -split "`n")) {
+    $continues = $unwrapped.Count -gt 0 -and $unwrapped[-1].Trim() -and $line.Trim() -and $line -notmatch '^\s*([-*#]|\d+\.)\s'
+    if ($continues) { $unwrapped[-1] += ' ' + $line.Trim() } else { $unwrapped += $line.TrimEnd() }
+}
+$changelog = $unwrapped -join "`n"
 if (-not $changelog) { throw "CHANGELOG.md has no '## $ChangelogSection' section." }
 
 # A jar built for one Minecraft version can declare that it runs on several.
@@ -68,6 +77,16 @@ function Get-VersionId([string]$name, [string]$typeSlugPattern) {
 $jars = @(Get-ChildItem (Join-Path $root 'dist') -Filter "minebhop-*-$Version+*.jar" |
     Where-Object { $_.Name -notlike '*-sources.jar' -and $_.Name -like $Only } | Sort-Object Name)
 if (-not $jars) { throw "No jars for $Version matching '$Only' in dist\." }
+
+# Every jar this script has uploaded, one name per line, so running it twice cannot post duplicates.
+$ledger = Join-Path $root 'dist\published.txt'
+$done = @(if (Test-Path $ledger) { Get-Content $ledger })
+$skipped = @($jars | Where-Object { $done -contains $_.Name })
+if ($skipped -and -not $Again) {
+    $skipped | ForEach-Object { Write-Host "Skipping $($_.Name): already uploaded (see dist\published.txt; -Again to resend)" -ForegroundColor Yellow }
+    $jars = @($jars | Where-Object { $done -notcontains $_.Name })
+    if (-not $jars) { Write-Host 'Nothing left to upload.'; return }
+}
 
 $plan = foreach ($jar in $jars) {
     if ($jar.Name -notmatch '^minebhop-(fabric|neoforge|forge)-(.+)\+(.+)\.jar$') { throw "Unexpected jar name: $($jar.Name)" }
@@ -124,5 +143,6 @@ foreach ($item in $plan) {
         # Stop at the first failure, so a mistake is not repeated across every jar.
         throw "Upload of $($item.Jar.Name) failed: $([int]$response.StatusCode) $body"
     }
+    Add-Content -Path $ledger -Value $item.Jar.Name
     Write-Host "Uploaded $($item.Jar.Name) -> $body" -ForegroundColor Green
 }

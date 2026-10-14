@@ -69,6 +69,9 @@ public class MineBhopFabric implements ClientModInitializer {
 		// Called on the network thread; setting the flag is all it does, so no hop to the client thread.
 		ClientPlayNetworking.registerGlobalReceiver(MineBhopFabricCommon.ALLOWED,
 				(client, handler, buf, sender) -> SourceMoveHandler.markServerAllowed());
+		// Read here, on the network thread, before the buffer is released.
+		ClientPlayNetworking.registerGlobalReceiver(MineBhopFabricCommon.SETTINGS,
+				(client, handler, buf, sender) -> SourceMoveHandler.receiveServerSettings(buf.readUtf()));
 	}
 
 	private static void onEndTick(Minecraft client) {

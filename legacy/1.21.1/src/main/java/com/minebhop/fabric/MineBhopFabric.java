@@ -7,6 +7,7 @@ import com.minebhop.gui.BhopConfigScreen;
 import com.minebhop.hud.SpeedometerRenderer;
 import com.minebhop.movement.SourceMoveHandler;
 import com.minebhop.net.BhopAllowedPayload;
+import com.minebhop.net.BhopSettingsPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -69,6 +70,8 @@ public class MineBhopFabric implements ClientModInitializer {
 
 		ClientPlayNetworking.registerGlobalReceiver(BhopAllowedPayload.TYPE,
 				(payload, context) -> SourceMoveHandler.markServerAllowed());
+		ClientPlayNetworking.registerGlobalReceiver(BhopSettingsPayload.TYPE,
+				(payload, context) -> SourceMoveHandler.receiveServerSettings(payload.json()));
 	}
 
 	private static void onEndTick(Minecraft client) {

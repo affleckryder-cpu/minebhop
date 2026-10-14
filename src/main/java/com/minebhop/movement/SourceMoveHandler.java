@@ -46,6 +46,9 @@ public final class SourceMoveHandler {
 		serverNoticeShown = false;
 		serverAllowed = false;
 		jumpStats.cancel();
+		if (MineBhop.configManager() != null) {
+			MineBhop.configManager().clearServerPhysics();
+		}
 	}
 
 	/** The last jump's stats, or null when there is none or jumpStats is off. */
@@ -56,6 +59,25 @@ public final class SourceMoveHandler {
 	/** The server we are on runs MineBhop and has said Source movement is allowed. */
 	public static void markServerAllowed() {
 		serverAllowed = true;
+	}
+
+	/**
+	 * The server we are on sent the physics to use while connected. Safe to call from the network
+	 * thread: the work happens on the client thread.
+	 */
+	public static void receiveServerSettings(String json) {
+		Minecraft client = Minecraft.getInstance();
+		client.execute(() -> {
+			serverAllowed = true;
+			boolean first = !MineBhop.configManager().serverControlled();
+			if (MineBhop.configManager().applyServerPhysics(json)) {
+				MineBhop.state().reset();
+				if (first && client.player != null) {
+					client.player.sendSystemMessage(Component.literal("[MineBhop] This server sets the movement "
+							+ "physics while you're here. Your own settings come back when you leave."));
+				}
+			}
+		});
 	}
 
 	/**

@@ -56,7 +56,7 @@ public class BhopConfigScreen extends Screen {
 	private static final int ON_ACCENT = 0xFF0B0D12;
 	private static final int INVALID = 0xFFFF5C6C;
 	private static final int PANEL = 0xB0101218;
-	private static final int MENU = 0xF4141720;
+	private static final int MENU = 0xFF141720;
 	private static final int SURFACE = 0xFF20242E;
 	private static final int SURFACE_HOT = 0xFF2C323F;
 	private static final int ROW_HOT = 0x14FFFFFF;
@@ -101,12 +101,16 @@ public class BhopConfigScreen extends Screen {
 		// One row along the top: presets dropdown, reset, then a name box and Save for custom ones.
 		int y = 26;
 		int x = (width - 322) / 2;
-		addRenderableWidget(new FlatButton(x, y, DROPDOWN_WIDTH, 20,
+		FlatButton presets = addRenderableWidget(new FlatButton(x, y, DROPDOWN_WIDTH, 20,
 				Component.literal(dropdownOpen ? "Presets  ▴" : "Presets  ▾"), FlatButton.Style.NORMAL, button -> {
 			dropdownOpen = !dropdownOpen;
 			dropdownClicked = true;
 			rebuildWidgets();
 		}));
+		if (manager.serverControlled()) {
+			presets.active = false;
+			presets.setTooltip(Tooltip.create(Component.literal(SERVER_LOCKED)));
+		}
 		FlatButton reset = addRenderableWidget(new FlatButton(x + 124, y, 50, 20, Component.literal("Reset"),
 				FlatButton.Style.NORMAL, button -> {
 			manager.reset();
@@ -206,7 +210,7 @@ public class BhopConfigScreen extends Screen {
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
 		super.extractRenderState(graphics, mouseX, mouseY, delta);
 		String brand = "MINEBHOP";
-		String rest = "  SETTINGS";
+		String rest = MineBhop.configManager().serverControlled() ? "  SETTINGS  ·  PHYSICS SET BY THIS SERVER" : "  SETTINGS";
 		int left = (width - font.width(brand + rest)) / 2;
 		graphics.text(font, brand, left, 10, ACCENT, false);
 		graphics.text(font, rest, left + font.width(brand), 10, DIM, false);
@@ -221,6 +225,9 @@ public class BhopConfigScreen extends Screen {
 			super.onClose();
 		}
 	}
+
+	private static final String SERVER_LOCKED =
+			"This server sets the physics while you're connected. Your own settings come back when you leave.";
 
 	/** "airAcceleration" -> "Air Acceleration". */
 	private static String label(String key) {
@@ -455,6 +462,10 @@ public class BhopConfigScreen extends Screen {
 
 			String cvar = tunable.cvar().isEmpty() ? "" : "\n\nSource cvar: " + tunable.cvar();
 			widget.setTooltip(Tooltip.create(Component.literal(tunable.value() + cvar + "\n\n/bhop set " + key)));
+			if (MineBhop.configManager().locked(key)) {
+				widget.active = false;
+				widget.setTooltip(Tooltip.create(Component.literal(SERVER_LOCKED)));
+			}
 		}
 
 		private AbstractWidget createWidget(Field field, String key) {

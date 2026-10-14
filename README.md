@@ -175,6 +175,28 @@ shows there instead of in chat.
 1000 u/s, runs green to yellow to red, and the level number shows your speed. Standing still, your
 normal XP shows.
 
+### On a server
+
+Put the same jar on a Fabric, NeoForge or Forge server and players with the mod can bhop there
+without turning on `allowOnServers`. Players without it join as normal.
+
+A dedicated server can also decide the physics for everyone. On first start it writes
+`config/minebhop-server.json`:
+
+```json
+{
+  "help": "...",
+  "syncSettings": false,
+  "settings": { "maxSpeed": "250.0", "airAcceleration": "12.0", ... }
+}
+```
+
+Set `syncSettings` to `true` and edit `settings` (the same keys as `/bhop set`, everything outside
+General). Each player with the mod then uses those values while connected, and gets their own back
+when they leave; nothing is written to their config. The physics rows in their settings screen show
+as locked. The file is read every time someone joins, so edits need no restart. Values outside the
+mod's limits are ignored, so a server cannot push anything a player could not set themselves.
+
 ## How to actually gain speed
 
 1. `/bhop mode AUTO` and hold space. Auto mode hops on every landing, so you can ignore

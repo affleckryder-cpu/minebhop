@@ -135,6 +135,9 @@ public final class BhopCommand {
 								.suggests(presets())
 								.executes(context -> {
 									String name = StringArgumentType.getString(context, "name");
+									if (MineBhop.configManager().serverControlled()) {
+										return error(context, feedback, "This server sets the physics while you're connected");
+									}
 									if (!MineBhop.configManager().applyPreset(name)) {
 										return error(context, feedback, "Unknown preset. Try one of: "
 												+ String.join(", ", MineBhop.configManager().presetNames()));

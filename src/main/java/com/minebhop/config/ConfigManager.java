@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Loads, saves and reflectively edits {@link BhopConfig}.
@@ -65,6 +66,10 @@ public final class ConfigManager {
 		} catch (IOException | JsonSyntaxException e) {
 			LOGGER.error("Could not read {}, keeping defaults", file, e);
 		}
+		if (serverPhysics != null) {
+			ownPhysics = physicsValues(config);
+			serverPhysics.forEach(this::assign);
+		}
 	}
 
 	/**
@@ -104,6 +109,11 @@ public final class ConfigManager {
 	}
 
 	public void save() {
+		// While a server's physics are applied, the file keeps the player's own: swap them in for
+		// the write and back out after.
+		if (serverPhysics != null) {
+			ownPhysics.forEach(this::assign);
+		}
 		try {
 			Files.createDirectories(file.getParent());
 			try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
@@ -111,11 +121,20 @@ public final class ConfigManager {
 			}
 		} catch (IOException e) {
 			LOGGER.error("Could not write {}", file, e);
+		} finally {
+			if (serverPhysics != null) {
+				serverPhysics.forEach(this::assign);
+			}
 		}
 	}
 
 	public void reset() {
 		config = new BhopConfig();
+		if (serverPhysics != null) {
+			// The player's own physics go back to defaults; the server's stay in force until they leave.
+			ownPhysics = physicsValues(config);
+			serverPhysics.forEach(this::assign);
+		}
 	}
 
 	// ------------------------------------------------------------------
@@ -183,26 +202,7 @@ public final class ConfigManager {
 		if (List.of(BhopConfig.presetNames()).contains(key) || key.equals("save") || key.equals("delete")) {
 			return "'" + key + "' is taken; pick another name";
 		}
-		Map<String, String> values = new LinkedHashMap<>();
-		boolean general = false;
-		for (Field field : BhopConfig.class.getDeclaredFields()) {
-			Tunable tunable = field.getAnnotation(Tunable.class);
-			if (tunable == null) {
-				continue;
-			}
-			if (!tunable.section().isEmpty()) {
-				general = tunable.section().equals("General");
-			}
-			if (general) {
-				continue;
-			}
-			try {
-				values.put(field.getName(), String.valueOf(field.get(config)));
-			} catch (IllegalAccessException e) {
-				return "Could not read '" + field.getName() + "'";
-			}
-		}
-		presets.put(key, values);
+		presets.put(key, physicsValues(config));
 		savePresets();
 		return null;
 	}
@@ -218,6 +218,9 @@ public final class ConfigManager {
 
 	/** Applies a built-in or custom preset. @return false if the name is unknown */
 	public boolean applyPreset(String name) {
+		if (serverPhysics != null) {
+			return false;
+		}
 		if (config.applyPreset(name)) {
 			return true;
 		}
@@ -229,6 +232,141 @@ public final class ConfigManager {
 		// and unparseable values are simply skipped.
 		values.forEach(this::set);
 		return true;
+	}
+
+	/**
+	 * Every setting outside the General section, as key to value: what a preset stores and what a
+	 * server can set.
+	 */
+	public static Map<String, String> physicsValues(BhopConfig source) {
+		Map<String, String> values = new LinkedHashMap<>();
+		boolean general = false;
+		for (Field field : BhopConfig.class.getDeclaredFields()) {
+			Tunable tunable = field.getAnnotation(Tunable.class);
+			if (tunable == null) {
+				continue;
+			}
+			if (!tunable.section().isEmpty()) {
+				general = tunable.section().equals("General");
+			}
+			if (general) {
+				continue;
+			}
+			try {
+				values.put(field.getName(), String.valueOf(field.get(source)));
+			} catch (IllegalAccessException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+		return values;
+	}
+
+	private static final Set<String> PHYSICS_KEYS = physicsValues(new BhopConfig()).keySet();
+
+	// ------------------------------------------------------------------
+	// Physics set by a server
+	// ------------------------------------------------------------------
+
+	/** The server's values while they are applied, else null. */
+	private Map<String, String> serverPhysics;
+	/** The player's own values, kept while a server's are applied. */
+	private Map<String, String> ownPhysics;
+
+	/** True while a server's physics are in force. */
+	public boolean serverControlled() {
+		return serverPhysics != null;
+	}
+
+	/** True when {@code key} is a physics setting a server currently controls. */
+	public boolean locked(String key) {
+		Field field = findField(key);
+		return serverPhysics != null && field != null && PHYSICS_KEYS.contains(field.getName());
+	}
+
+	/**
+	 * Applies the physics a server sent, as JSON of key to value, on top of the player's own until
+	 * {@link #clearServerPhysics()}. Values outside a setting's {@link Range} are refused, so a
+	 * server cannot push anything a player could not set themselves; the player's own value stays.
+	 *
+	 * @return false if the JSON could not be read
+	 */
+	public boolean applyServerPhysics(String json) {
+		Map<String, String> values;
+		try {
+			values = GSON.fromJson(json, new TypeToken<LinkedHashMap<String, String>>() { }.getType());
+		} catch (JsonSyntaxException e) {
+			LOGGER.error("Server sent unreadable settings", e);
+			return false;
+		}
+		if (values == null) {
+			return false;
+		}
+		if (serverPhysics == null) {
+			ownPhysics = physicsValues(config);
+		} else {
+			ownPhysics.forEach(this::assign);
+		}
+		Map<String, String> applied = new LinkedHashMap<>();
+		values.forEach((key, raw) -> {
+			if (!PHYSICS_KEYS.contains(key)) {
+				return;
+			}
+			String problem = assign(key, raw);
+			if (problem != null) {
+				LOGGER.warn("Ignored server setting {}: {}", key, problem);
+			} else {
+				applied.put(key, raw);
+			}
+		});
+		serverPhysics = applied;
+		return true;
+	}
+
+	/** Puts the player's own physics back. Called on leaving a server; does nothing otherwise. */
+	public void clearServerPhysics() {
+		if (serverPhysics == null) {
+			return;
+		}
+		serverPhysics = null;
+		ownPhysics.forEach(this::assign);
+		ownPhysics = null;
+	}
+
+	/** File name, in the server's config folder, of the settings a server sends. */
+	public static final String SERVER_FILE = "minebhop-server.json";
+
+	private static final class ServerFile {
+		String help = "Set syncSettings to true and every player with MineBhop uses these settings while "
+				+ "on this server; their own come back when they leave. Read each time someone joins, "
+				+ "so changes need no restart. Values outside the mod's limits are ignored.";
+		boolean syncSettings = false;
+		Map<String, String> settings = physicsValues(new BhopConfig());
+	}
+
+	/**
+	 * For a dedicated server: the settings in {@code file} as JSON to send to a joining player, or
+	 * null when syncing is off. Writes the file, with syncing off, if it does not exist yet.
+	 */
+	public static String readServerSettings(Path file) {
+		ServerFile server = null;
+		if (Files.exists(file)) {
+			try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+				server = GSON.fromJson(reader, ServerFile.class);
+			} catch (IOException | JsonSyntaxException e) {
+				LOGGER.error("Could not read {}, not sending settings", file, e);
+				return null;
+			}
+		} else {
+			try {
+				Files.createDirectories(file.getParent());
+				try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+					GSON.toJson(new ServerFile(), writer);
+				}
+			} catch (IOException e) {
+				LOGGER.error("Could not write {}", file, e);
+			}
+		}
+		return server != null && server.syncSettings && server.settings != null ? GSON.toJson(server.settings) : null;
 	}
 
 	// ------------------------------------------------------------------
@@ -282,11 +420,18 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Parses {@code raw} into the field's type and assigns it.
+	 * Parses {@code raw} into the field's type and assigns it, unless a server controls it.
 	 *
 	 * @return null on success, otherwise a human readable error
 	 */
 	public String set(String key, String raw) {
+		if (locked(key)) {
+			return "This server sets " + findField(key).getName() + " while you're connected";
+		}
+		return assign(key, raw);
+	}
+
+	private String assign(String key, String raw) {
 		Field field = findField(key);
 		if (field == null) {
 			return "Unknown setting '" + key + "'";
