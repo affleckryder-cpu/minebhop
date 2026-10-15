@@ -5,8 +5,8 @@ the CS:GO model. Ground friction and acceleration, air acceleration with the 30 
 bunny hopping with configurable timing, the speed gain that comes out of air strafing, and
 look-directed ladder climbing.
 
-Built for **Fabric and NeoForge**, on **Minecraft 1.19.2, 1.20.1, 1.21.1, 1.21.11 and 26.1 to 26.3**,
-from one shared codebase. On 1.19.2 and 1.20.1 the second loader is **Forge** rather than NeoForge.
+Built for **Fabric and NeoForge**, on **Minecraft 1.18.2, 1.19.2, 1.20.1, 1.21.1, 1.21.11 and 26.1 to
+26.3**, from one shared codebase. On 1.18.2, 1.19.2 and 1.20.1 the second loader is **Forge** rather than NeoForge.
 
 ## Downloads
 
@@ -15,6 +15,7 @@ name ends in the Minecraft version it is for: `minebhop-<loader>-<mod version>+<
 
 | Minecraft | Jar suffix | Java |
 |---|---|---|
+| 1.18.2 | `+1.18.2` | 17 |
 | 1.19.2 | `+1.19.2` | 17 |
 | 1.20.1 | `+1.20.1` | 17 |
 | 1.21.1 | `+1.21.1` | 21 |
@@ -126,6 +127,10 @@ Minecraft 1.19.2 is in `legacy/1.19.2/`, laid out exactly like 1.20.1 (same thre
 path). 1.19.2 predates `GuiGraphics`, so it carries a small stand-in class of the same shape over
 `PoseStack`; the HUD is shared unchanged through it, and the settings screen is 1.20.1's with the
 older widget API (public `x`/`y` fields, tooltips drawn by the screen, no placeholder text).
+
+Minecraft 1.18.2 is in `legacy/1.18.2/`, a copy of 1.19.2 with a few more renames (`TextComponent`
+for `Component.literal`, chat through `ChatComponent`) and the older loader APIs: Fabric's global
+client command dispatcher, and Forge's `ClientRegistry`, `OverlayRegistry` and `ConfigGuiHandler`.
 
 ## Using it
 

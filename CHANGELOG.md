@@ -3,6 +3,17 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## 1.4.2 for Minecraft 1.18.2
+
+First release for Minecraft 1.18.2, on Fabric and Forge. Requires Java 17.
+
+### Included
+- **Source movement:** bunny hopping, air strafing and Source-style ladders
+- **HUD and XP bar speedometer**, both optional
+- **Jump stats** after every jump
+- **Settings screen** (`\`) with sliders, switches and presets
+- **Server support**, including server settings sync
+
 ## 1.4.2 for Minecraft 1.19.2
 
 First release for Minecraft 1.19.2, on Fabric and Forge. Requires Java 17.
