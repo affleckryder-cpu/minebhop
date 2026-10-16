@@ -18,6 +18,7 @@ def portedFiles = [
 		'com/minebhop/mixin/PlayerTravelMixin.java',
 		'com/minebhop/mixin/LivingEntityJumpMixin.java',
 		'com/minebhop/mixin/PlayerFallDamageMixin.java',
+		'com/minebhop/mixin/LocalPlayerPositionMixin.java',
 ]
 
 // 26.x name -> 1.20.1 name. Plain text replacement, applied to every ported file, so each entry

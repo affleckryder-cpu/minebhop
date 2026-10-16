@@ -3,6 +3,17 @@
 All builds share one codebase. A given mod version behaves identically on every Minecraft version
 and both loaders — only the compatibility metadata differs.
 
+## 1.5.0
+
+### Added
+- **Surf**, off by default: stairs hit at bhop speed become ramps you slide along
+- **`surf` preset:** air acceleration 150 and no fall damage. Turns surf on, or use `/bhop set surf true`
+- `surfMinSpeed` setting: how fast you must hit stairs for them to become a ramp (300 u/s)
+
+### Changed
+- The fall damage switch has its own **Damage** section in settings
+- `csgo`, `css` and `kz` presets turn surf and no fall damage back off
+
 ## 1.4.2 for Minecraft 1.18.2
 
 First release for Minecraft 1.18.2, on Fabric and Forge. Requires Java 17.

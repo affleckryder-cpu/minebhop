@@ -37,12 +37,6 @@ public class BhopConfig {
 			+ "there instead of in chat. Off by default, since bhopping prints a line per hop.")
 	public boolean jumpStats = false;
 
-	@Tunable("Suppress fall damage entirely. Off by default -- fall damage is part of the game, and "
-			+ "preserveMomentumOnDamage already stops it from costing you speed, which is the part "
-			+ "that actually ruins a hop chain. Only works in singleplayer and for a LAN host, since "
-			+ "damage is decided by the authoritative side.")
-	public boolean disableFallDamage = false;
-
 	@Tunable("Ignore server velocity corrections that would bleed off horizontal speed.\n"
 			+ "Taking damage makes the server call markHurt(), which pushes a "
 			+ "ClientboundSetEntityMotionPacket back at you carrying the server's own idea of your "
@@ -51,6 +45,17 @@ public class BhopConfig {
 			+ "Corrections that would speed you up are still applied, so explosions and mob knockback "
 			+ "keep working.")
 	public boolean preserveMomentumOnDamage = true;
+
+	// ------------------------------------------------------------------
+	// Damage. Its own section rather than part of General so that presets, which leave General
+	// alone, can switch it: the surf preset needs it off.
+	// ------------------------------------------------------------------
+
+	@Tunable(section = "Damage", value = "Suppress fall damage entirely. Off by default -- fall damage is part of the game, and "
+			+ "preserveMomentumOnDamage already stops it from costing you speed, which is the part "
+			+ "that actually ruins a hop chain. Only works in singleplayer and for a LAN host, since "
+			+ "damage is decided by the authoritative side.")
+	public boolean disableFallDamage = false;
 
 	// ------------------------------------------------------------------
 	// Core Source movement cvars
@@ -179,6 +184,22 @@ public class BhopConfig {
 	public double ladderDiagonalBoost = 1.414;
 
 	// ------------------------------------------------------------------
+	// Surf
+	// ------------------------------------------------------------------
+
+	@Tunable(section = "Surf", value = "Off by default. Stairs become surf ramps when you hit them fast enough: you slide along the "
+			+ "slope through the tips of the steps instead of landing on them. Hold strafe into the ramp "
+			+ "to stay on and turn to steer; gravity turns height into speed. Only straight, right-way-up "
+			+ "stairs count, and a run of stairs stacked one up and one back is one long ramp.")
+	public boolean surf = false;
+
+	@Tunable(value = "Speed at which stairs stop being steps and start being a ramp. Above running speed, "
+			+ "so walking up and down stairs stays normal. Once riding, you stay on down to three "
+			+ "quarters of this.", unit = "u/s")
+	@Range(min = 100, max = 1000)
+	public double surfMinSpeed = 300.0;
+
+	// ------------------------------------------------------------------
 	// Simulation fidelity
 	// ------------------------------------------------------------------
 
@@ -212,6 +233,8 @@ public class BhopConfig {
 	public boolean applyPreset(String name) {
 		switch (name.toLowerCase()) {
 			case "csgo" -> {
+				disableFallDamage = false;
+				surf = false;
 				maxSpeed = 250.0;
 				acceleration = 5.5;
 				airAcceleration = 12.0;
@@ -224,6 +247,8 @@ public class BhopConfig {
 				simulationTickrate = 64;
 			}
 			case "css" -> {
+				disableFallDamage = false;
+				surf = false;
 				// Counter-Strike: Source
 				maxSpeed = 250.0;
 				acceleration = 5.0;
@@ -237,6 +262,8 @@ public class BhopConfig {
 				simulationTickrate = 66;
 			}
 			case "kz" -> {
+				disableFallDamage = false;
+				surf = false;
 				// Climb / bhop server settings: very high air accel, 128 tick.
 				maxSpeed = 250.0;
 				acceleration = 5.5;
@@ -248,6 +275,15 @@ public class BhopConfig {
 				jumpImpulse = 301.993;
 				enableBunnyHopping = true;
 				simulationTickrate = 128;
+			}
+			case "surf" -> {
+				// Surf server settings: the high air acceleration that makes it possible to steer
+				// from one ramp to the next, and no fall damage, since a ride ends in a drop.
+				applyPreset("csgo");
+				airAcceleration = 150.0;
+				simulationTickrate = 66;
+				surf = true;
+				disableFallDamage = true;
 			}
 			case "official" -> {
 				// Matchmaking CS:GO, where bunny hopping is deliberately broken.
@@ -263,6 +299,6 @@ public class BhopConfig {
 	}
 
 	public static String[] presetNames() {
-		return new String[] { "csgo", "css", "kz", "official" };
+		return new String[] { "csgo", "css", "kz", "surf", "official" };
 	}
 }

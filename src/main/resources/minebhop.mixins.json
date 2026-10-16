@@ -5,6 +5,7 @@
 	"client": [
 		"EntityLerpMotionMixin",
 		"LivingEntityJumpMixin",
+		"LocalPlayerPositionMixin",
 		"PlayerFallDamageMixin",
 		"PlayerTravelMixin"
 	],

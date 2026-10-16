@@ -67,7 +67,8 @@ public final class SpeedometerRenderer {
 		String status = chain
 				? String.format(Locale.ROOT, "x%d  ·  %dt  ·  %+.0f", state.hopStreak(), state.lastHopGroundTicks(), state.speedDelta())
 				: String.format(Locale.ROOT, "%s  ·  %s  ·  %dHz",
-						player.onGround() ? "GROUND" : "AIR", config.bhopMode, config.simulationTickrate);
+						SourceMoveHandler.surfing() ? "SURF" : player.onGround() ? "GROUND" : "AIR", config.bhopMode,
+						config.simulationTickrate);
 
 		JumpStats.Result jump = SourceMoveHandler.lastJump();
 		String[][] cells = jump == null ? null : new String[][] {

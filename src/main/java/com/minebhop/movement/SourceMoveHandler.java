@@ -38,6 +38,7 @@ public final class SourceMoveHandler {
 	private static boolean hasPrevYaw;
 	private static boolean serverNoticeShown;
 	private static boolean serverAllowed;
+	private static boolean surfing;
 	private static final JumpStats jumpStats = new JumpStats();
 
 	/** Called between worlds, so each session starts with fresh per-world state. */
@@ -45,6 +46,7 @@ public final class SourceMoveHandler {
 		hasPrevYaw = false;
 		serverNoticeShown = false;
 		serverAllowed = false;
+		surfing = false;
 		jumpStats.cancel();
 		if (MineBhop.configManager() != null) {
 			MineBhop.configManager().clearServerPhysics();
@@ -54,6 +56,11 @@ public final class SourceMoveHandler {
 	/** The last jump's stats, or null when there is none or jumpStats is off. */
 	public static JumpStats.Result lastJump() {
 		return MineBhop.config().jumpStats ? jumpStats.last() : null;
+	}
+
+	/** True while the player is riding a surf ramp. */
+	public static boolean surfing() {
+		return surfing;
 	}
 
 	/** The server we are on runs MineBhop and has said Source movement is allowed. */
@@ -152,6 +159,18 @@ public final class SourceMoveHandler {
 
 		boolean grounded = player.onGround();
 
+		// Surf: a stair hit fast enough is a slope to slide along, not steps to stand on. Like a
+		// surf ramp in Source it is never ground -- no friction and no jumping -- so gravity and
+		// air strafing are all there is. A little slower is enough to stay on once riding.
+		SurfRamp ramp = config.surf ? SurfRamp.under(player, initial.y) : null;
+		double speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+		surfing = ramp != null && speed >= (surfing ? config.surfMinSpeed * 0.75 : config.surfMinSpeed);
+		if (surfing) {
+			grounded = false;
+			// A long ride down a ramp is not a fall.
+			player.resetFallDistance();
+		}
+
 		Input keys = player.input.keyPresses;
 		double forwardMove = (keys.forward() ? 1.0 : 0.0) - (keys.backward() ? 1.0 : 0.0);
 		double sideMove = (keys.right() ? 1.0 : 0.0) - (keys.left() ? 1.0 : 0.0);
@@ -165,7 +184,7 @@ public final class SourceMoveHandler {
 
 		// --- CheckJumpButton, ahead of friction so a perfect hop keeps its speed ---
 		boolean jumped = state.decideJump(keys.jump(), grounded, config);
-		if (config.jumpStats) {
+		if (config.jumpStats && !surfing) {
 			jumpStats.checkContinuity(player);
 			if (grounded) {
 				// Also covers a hop taken on the landing tick: the previous jump ends here.
@@ -227,9 +246,15 @@ public final class SourceMoveHandler {
 
 		SourceMovement.clampVelocity(velocity, config.maxVelocity);
 
-		// Hand off to Minecraft for collision, step-up and block speed factors.
-		player.setDeltaMovement(velocity.x / scale, velocity.y / scale, velocity.z / scale);
-		player.move(MoverType.SELF, player.getDeltaMovement());
+		if (surfing) {
+			clipToRamp(velocity, ramp);
+			player.setDeltaMovement(velocity.x / scale, velocity.y / scale, velocity.z / scale);
+			surfMove(player, ramp);
+		} else {
+			// Hand off to Minecraft for collision, step-up and block speed factors.
+			player.setDeltaMovement(velocity.x / scale, velocity.y / scale, velocity.z / scale);
+			player.move(MoverType.SELF, player.getDeltaMovement());
+		}
 
 		// Read back: move() zeroes axes that collided and may have scaled us.
 		Vec3 moved = player.getDeltaMovement();
@@ -239,12 +264,15 @@ public final class SourceMoveHandler {
 			// FinishGravity: the other half, after the move.
 			velocity.y -= config.gravity * TICK_SECONDS * 0.5;
 		}
+		if (surfing) {
+			clipToRamp(velocity, ramp);
+		}
 
 		SourceMovement.clampVelocity(velocity, config.maxVelocity);
 		player.setDeltaMovement(velocity.x / scale, velocity.y / scale, velocity.z / scale);
 
 		state.recordSpeed(velocity.horizontalSpeed());
-		if (!grounded && config.jumpStats) {
+		if (!grounded && !surfing && config.jumpStats) {
 			jumpStats.airTick(Mth.wrapDegrees(currentYaw - prevYaw), sideMove, velocity.horizontalSpeed());
 		}
 		prevYaw = currentYaw;
@@ -333,6 +361,49 @@ public final class SourceMoveHandler {
 			return state.getValue(LadderBlock.FACING).getUnitVec3();
 		}
 		return null;
+	}
+
+	/** How far above the ramp a surfing player is held, so they never touch the step tips. */
+	private static final double SURF_CLEARANCE = 0.01;
+
+	/**
+	 * Source's {@code ClipVelocity} with an overbounce of 1: removes the part of the velocity going
+	 * into the ramp. Gravity pulling into a slope comes back out as speed along it, which is all
+	 * surfing is.
+	 */
+	private static void clipToRamp(SrcVec velocity, SurfRamp ramp) {
+		double into = velocity.x * ramp.normalX + velocity.y * ramp.normalY + velocity.z * ramp.normalZ;
+		if (into < 0.0) {
+			velocity.x -= ramp.normalX * into;
+			velocity.y -= ramp.normalY * into;
+			velocity.z -= ramp.normalZ * into;
+		}
+	}
+
+	/**
+	 * Moves a surfing player by their delta movement, kept on top of the ramp.
+	 *
+	 * <p>Minecraft resolves vertical movement before horizontal, which on a slope means dropping
+	 * onto the next step's corner and stopping. So height comes from the ramp instead -- lifted
+	 * before a move up it, lowered after a move down it -- and only the horizontal part goes
+	 * through normal collision, so walls and anything else solid still stop you.
+	 */
+	private static void surfMove(LocalPlayer player, SurfRamp ramp) {
+		Vec3 delta = player.getDeltaMovement();
+		double half = player.getBbWidth() / 2.0;
+		double floor = ramp.heightAt(player.getX() + delta.x, player.getZ() + delta.z, half) + SURF_CLEARANCE;
+		double rise = Math.max(player.getY() + delta.y, floor) - player.getY();
+		if (rise > 0.0) {
+			player.move(MoverType.SELF, new Vec3(0.0, rise, 0.0));
+		}
+		player.move(MoverType.SELF, new Vec3(delta.x, 0.0, delta.z));
+		if (rise < 0.0) {
+			player.move(MoverType.SELF, new Vec3(0.0, rise, 0.0));
+		}
+		// Each move() above only zeroes the axes it collided on; restore what it did not touch.
+		Vec3 after = player.getDeltaMovement();
+		player.setDeltaMovement(after.x == 0.0 && player.horizontalCollision ? 0.0 : delta.x, delta.y,
+				after.z == 0.0 && player.horizontalCollision ? 0.0 : delta.z);
 	}
 
 	/** Horizontal unit vector the player faces, ignoring pitch. */

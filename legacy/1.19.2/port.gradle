@@ -18,6 +18,7 @@ def portedFiles = [
 		'com/minebhop/mixin/PlayerTravelMixin.java',
 		'com/minebhop/mixin/LivingEntityJumpMixin.java',
 		'com/minebhop/mixin/PlayerFallDamageMixin.java',
+		'com/minebhop/mixin/LocalPlayerPositionMixin.java',
 ]
 
 // 26.x name -> 1.19.2 name. Plain text replacement, applied to every ported file, so each entry
@@ -38,6 +39,8 @@ def renames = [
 		'keys.shift()'                                      : 'keys.shiftKeyDown',
 		'state.getValue(LadderBlock.FACING).getUnitVec3()'  : 'Vec3.atLowerCornerOf(state.getValue(LadderBlock.FACING).getNormal())',
 		'player.getInBlockState()'                          : 'player.getFeetBlockState()',
+		// Entity#level became a method in 1.20.
+		'player.level().getBlockState('                    : 'player.level.getBlockState(',
 		'player.onGround()'                                 : 'player.isOnGround()',
 		// HUD drawing
 		'GuiGraphicsExtractor'                              : 'GuiGraphics',

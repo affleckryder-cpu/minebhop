@@ -155,7 +155,7 @@ from the mods list: the Config button on NeoForge, and the settings button in
 /bhop on | off             toggle the simulation
 /bhop hud                  toggle the HUD
 /bhop mode MANUAL|AUTO     hop mode
-/bhop preset <name>        csgo, css, kz, official
+/bhop preset <name>        csgo, css, kz, surf, official
 /bhop preset save <name>   save your current physics settings as a preset
 /bhop preset delete <name> remove one you saved
 /bhop set <key> <value>    change any setting, with tab completion
@@ -185,6 +185,20 @@ shows there instead of in chat.
 `/bhop set xpBarSpeed true` turns the XP bar into a speedometer while you move: it fills toward
 1000 u/s, runs green to yellow to red, and the level number shows your speed. Standing still, your
 normal XP shows.
+
+### Surf
+
+Off by default. Turn it on with `/bhop preset surf`, or `/bhop set surf true` to keep the rest of
+your settings. Then stairs are surf ramps: hit a straight, right-way-up stair faster than `surfMinSpeed` (300 u/s,
+above running speed) and you slide along the slope through the tips of the steps instead of landing
+on them. Hold the strafe key *into* the ramp and turn to steer: gravity pulls you down the slope
+and that becomes speed, as in CS. Stairs stacked one up and one back are one long ramp. Walking up
+and down stairs is unchanged, since you only get there at bhop speed.
+
+`/bhop preset surf` sets what surf servers use: air acceleration 150, 66 tick and no fall damage.
+At the default air acceleration (12) steering between ramps is very hard. Fall damage is
+suppressed in singleplayer and on LAN worlds; on a server the server decides it, and the mod only
+tells it you are on a surface while you ride, so a ramp ride does not count as a fall.
 
 ### On a server
 
